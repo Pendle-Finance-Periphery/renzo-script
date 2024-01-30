@@ -46,10 +46,10 @@ export async function handleMarketRedeemReward(
 }
 
 export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
-  await processAllAccounts(ctx);
+  await processAllLPAccounts(ctx);
 }
 
-async function processAllAccounts(ctx: PendleMarketContext) {
+export async function processAllLPAccounts(ctx: PendleMarketContext) {
   // might not need to do this on interval since we are doing it on every swap
   const accountSnapshots = await db.asyncFind<AccountSnapshot>({});
   for (const snapshot of accountSnapshots) {

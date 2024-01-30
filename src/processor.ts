@@ -6,7 +6,7 @@ import { handleSYTransfer } from './handlers/SY.js'
 import { PendleYieldTokenProcessor } from './types/eth/pendleyieldtoken.js'
 import { handleYTRedeemInterest, handleYTTransfer, processAllYTAccounts } from './handlers/YT.js'
 import { PendleMarketProcessor } from './types/eth/pendlemarket.js'
-import { handleLPTransfer, handleMarketRedeemReward } from './handlers/LP.js'
+import { handleLPTransfer, handleMarketRedeemReward, processAllLPAccounts } from './handlers/LP.js'
 
 
 
@@ -39,4 +39,6 @@ PendleMarketProcessor.bind({
   await handleLPTransfer(evt, ctx);
 }).onEventRedeemRewards(async(evt, ctx) => {
   await handleMarketRedeemReward(evt, ctx);
-})
+}).onTimeInterval(async(_, ctx) => {
+  await processAllLPAccounts(ctx);
+}, MISC_CONSTS.ONE_DAY_IN_MINUTE);
