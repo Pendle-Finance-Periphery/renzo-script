@@ -1,0 +1,25 @@
+{
+  "private": true,
+  "name": "pendle-renzo-tracking",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "build": "sentio build",
+    "gen": "sentio gen",
+    "test": "sentio test",
+    "upload": "sentio upload",
+    "postinstall": "sentio gen"
+  },
+  "dependencies": {
+    "@sentio/sdk": "^2.31.2",
+    "@types/nedb": "^1.8.16",
+    "nedb": "^1.8.0",
+    "nedb-async": "^0.1.6",
+    "sqlite": "^5.1.1",
+    "sqlite3": "^5.1.7"
+  },
+  "devDependencies": {
+    "@sentio/cli": "^2.13.2",
+    "typescript": "^5.2.2"
+  }
+}
