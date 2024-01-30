@@ -29,7 +29,7 @@ PendleYieldTokenProcessor.bind({
   await handleYTRedeemInterest(evt, ctx);
 }).onTimeInterval(async(_, ctx) => {
   await processAllYTAccounts(ctx);
-}, 60);
+}, MISC_CONSTS.ONE_DAY_IN_MINUTE);
 
 PendleMarketProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.LP,
