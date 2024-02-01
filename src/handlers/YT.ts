@@ -65,6 +65,12 @@ async function processAccount(account: string, ctx: PendleYieldTokenContext) {
   }
 
   const interestData = await ctx.contract.userInterest(account);
+
+  if (interestData.lastPYIndex == 0n) {
+    // must be YT
+    return;
+  }
+
   const balance = await ctx.contract.balanceOf(account);
   const impliedHolding =
     (balance * MISC_CONSTS.ONE_E18) / interestData.lastPYIndex +

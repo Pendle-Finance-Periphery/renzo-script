@@ -15,6 +15,7 @@ export const PENDLE_POOL_ADDRESSES = {
     LP: "0xde715330043799d7a80249660d1e6b61eb3713b3",
     START_BLOCK: 19105379,
     TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
+    EQB_STAKING: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
     LIQUID_LOCKERS: [
         {
             // Penpie
@@ -22,8 +23,9 @@ export const PENDLE_POOL_ADDRESSES = {
             receiptToken: "0x788d39ebe18bcd1323b9e879fc87ca24746223db",
         },
         {
-            address: MISC_CONSTS.ZERO_ADDRESS,
-            receiptToken: MISC_CONSTS.ZERO_ADDRESS,
+            // EQB
+            address: '0x64627901dadb46ed7f275fd4fc87d086cff1e6e3',
+            receiptToken: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
         },
         {
             address: MISC_CONSTS.ZERO_ADDRESS,

@@ -4,11 +4,13 @@ import {
   RedeemRewardsEvent,
   SwapEvent,
   TransferEvent,
+  getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
 import { getUnixTimestamp, isLiquidLockerAddress } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
+import { EthContext } from "@sentio/sdk/eth";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
@@ -34,15 +36,15 @@ export async function handleLPTransfer(
   evt: TransferEvent,
   ctx: PendleMarketContext
 ) {
-  await processAccount(evt.args.from, ctx);
-  await processAccount(evt.args.to, ctx);
+  await processLPAccount(evt.args.from, ctx);
+  await processLPAccount(evt.args.to, ctx);
 }
 
 export async function handleMarketRedeemReward(
   evt: RedeemRewardsEvent,
   ctx: PendleMarketContext
 ) {
-  await processAccount(evt.args.user, ctx);
+  await processLPAccount(evt.args.user, ctx);
 }
 
 export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
@@ -53,13 +55,14 @@ export async function processAllLPAccounts(ctx: PendleMarketContext) {
   // might not need to do this on interval since we are doing it on every swap
   const accountSnapshots = await db.asyncFind<AccountSnapshot>({});
   for (const snapshot of accountSnapshots) {
-    await processAccount(snapshot._id, ctx);
+    await processLPAccount(snapshot._id, ctx);
   }
 }
 
-async function processAccount(account: string, ctx: PendleMarketContext) {
+export async function processLPAccount(account: string, ctx: EthContext) {
   if (isLiquidLockerAddress(account)) return;
 
+  const marketContract = getPendleMarketContractOnContext(ctx, PENDLE_POOL_ADDRESSES.LP);
   const timestamp = getUnixTimestamp(ctx.timestamp);
   const snapshot = await db.asyncFindOne<AccountSnapshot>({ _id: account });
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
@@ -74,8 +77,8 @@ async function processAccount(account: string, ctx: PendleMarketContext) {
   }
 
   const share = await readUserMarketPosition(account, ctx);
-  const totalShare = await ctx.contract.totalActiveSupply();
-  const state = await ctx.contract.readState(ctx.contract.address);
+  const totalShare = await marketContract.totalActiveSupply();
+  const state = await marketContract.readState(marketContract.address);
   const impliedHolding = (share * state.totalSy) / totalShare;
   const newSnapshot = {
     _id: account,
@@ -88,9 +91,10 @@ async function processAccount(account: string, ctx: PendleMarketContext) {
 
 async function readUserMarketPosition(
   account: string,
-  ctx: PendleMarketContext
+  ctx: EthContext
 ): Promise<bigint> {
-  let share = await ctx.contract.activeBalance(account);
+  const marketContract = getPendleMarketContractOnContext(ctx, PENDLE_POOL_ADDRESSES.LP);
+  let share = await marketContract.activeBalance(account);
   for (let liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
     if (liquidLocker.address == MISC_CONSTS.ZERO_ADDRESS) continue;
     try {
@@ -100,10 +104,10 @@ async function readUserMarketPosition(
         liquidLocker.receiptToken
       );
       const userBal = await receiptToken.balanceOf(account);
-      const liquidLockerBal = await ctx.contract.balanceOf(
+      const liquidLockerBal = await marketContract.balanceOf(
         liquidLocker.address
       );
-      const liquidLockerActiveBal = await ctx.contract.activeBalance(
+      const liquidLockerActiveBal = await marketContract.activeBalance(
         liquidLocker.address
       );
       share += (userBal * liquidLockerActiveBal) / liquidLockerBal;

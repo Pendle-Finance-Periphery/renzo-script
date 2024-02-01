@@ -5,8 +5,9 @@ import { isPendleAddress } from './helper.js'
 import { handleSYTransfer } from './handlers/SY.js'
 import { PendleYieldTokenProcessor } from './types/eth/pendleyieldtoken.js'
 import { handleYTRedeemInterest, handleYTTransfer, processAllYTAccounts } from './handlers/YT.js'
-import { PendleMarketProcessor } from './types/eth/pendlemarket.js'
-import { handleLPTransfer, handleMarketRedeemReward, processAllLPAccounts } from './handlers/LP.js'
+import { PendleMarketProcessor, getPendleMarketContractOnContext } from './types/eth/pendlemarket.js'
+import { handleLPTransfer, handleMarketRedeemReward, handleMarketSwap, processAllLPAccounts, processLPAccount } from './handlers/LP.js'
+import { EQBBaseRewardProcessor } from './types/eth/eqbbasereward.js'
 
 
 
@@ -41,4 +42,16 @@ PendleMarketProcessor.bind({
   await handleMarketRedeemReward(evt, ctx);
 }).onTimeInterval(async(_, ctx) => {
   await processAllLPAccounts(ctx);
-}, MISC_CONSTS.ONE_DAY_IN_MINUTE);
+}, MISC_CONSTS.ONE_DAY_IN_MINUTE).onEventSwap(async(evt, ctx) => {
+  await handleMarketSwap(evt, ctx);
+});
+
+EQBBaseRewardProcessor.bind({
+  address: PENDLE_POOL_ADDRESSES.EQB_STAKING,
+  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+  name: "Equilibria Base Reward",
+}).onEventStaked(async(evt, ctx) => {
+  await processLPAccount(evt.args._user, ctx);
+}).onEventWithdrawn(async(evt, ctx) => {
+  await processLPAccount(evt.args._user, ctx);
+})
