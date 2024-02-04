@@ -40,6 +40,8 @@ export async function updatePoints(
       ctx,
       label,
       account,
+      amountEzEthHolding,
+      holdingPeriod,
       ezPoint - ezPointTreasuryFee,
       elPoint - elPointTreasuryFee,
       updatedAt
@@ -48,12 +50,23 @@ export async function updatePoints(
       ctx,
       label,
       PENDLE_POOL_ADDRESSES.TREASURY,
+      0n,
+      holdingPeriod,
       ezPointTreasuryFee,
       elPointTreasuryFee,
       updatedAt
     );
   } else {
-    increasePoint(ctx, label, account, ezPoint, elPoint, updatedAt);
+    increasePoint(
+      ctx,
+      label,
+      account,
+      amountEzEthHolding,
+      holdingPeriod,
+      ezPoint,
+      elPoint,
+      updatedAt
+    );
   }
 }
 
@@ -61,6 +74,8 @@ function increasePoint(
   ctx: EthContext,
   label: string,
   account: string,
+  amountEzEthHolding: bigint,
+  holdingPeriod: bigint,
   ezPoint: bigint,
   elPoint: bigint,
   updatedAt: number
@@ -68,6 +83,8 @@ function increasePoint(
   ctx.eventLogger.emit("point_increase", {
     label,
     account: account.toLowerCase(),
+    amountEzEthHolding: amountEzEthHolding.scaleDown(18),
+    holdingPeriod,
     ezPoint,
     elPoint,
     updatedAt,
