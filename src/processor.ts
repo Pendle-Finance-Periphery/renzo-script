@@ -8,7 +8,11 @@ import { handleYTRedeemInterest, handleYTTransfer, processAllYTAccounts } from '
 import { PendleMarketProcessor, getPendleMarketContractOnContext } from './types/eth/pendlemarket.js'
 import { handleLPTransfer, handleMarketRedeemReward, handleMarketSwap, processAllLPAccounts, processLPAccount } from './handlers/LP.js'
 import { EQBBaseRewardProcessor } from './types/eth/eqbbasereward.js'
+import { GLOBAL_CONFIG } from "@sentio/runtime";
 
+GLOBAL_CONFIG.execution = {
+  sequential: true,
+};
 
 
 ERC20Processor.bind({
