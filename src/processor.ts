@@ -55,7 +55,15 @@ EQBBaseRewardProcessor.bind({
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Equilibria Base Reward",
 }).onEventStaked(async(evt, ctx) => {
-  await processLPAccount(evt.args._user, ctx);
+  await processAllLPAccounts(ctx);
 }).onEventWithdrawn(async(evt, ctx) => {
-  await processLPAccount(evt.args._user, ctx);
+  await processAllLPAccounts(ctx);
 })
+
+ERC20Processor.bind({
+  address: PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN,
+  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+  name: "Pendle Pie Receipt Token",
+}).onEventTransfer(async(evt, ctx) => {
+  await processAllLPAccounts(ctx);
+});

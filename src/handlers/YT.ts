@@ -49,7 +49,6 @@ async function processAccount(account: string, ctx: PendleYieldTokenContext) {
   if (account == MISC_CONSTS.ZERO_ADDRESS) {
     return;
   }
-
   const timestamp = getUnixTimestamp(ctx.timestamp);
 
   const snapshot = await db.asyncFindOne<AccountSnapshot>({ _id: account });

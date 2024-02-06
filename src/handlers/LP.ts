@@ -36,22 +36,21 @@ export async function handleLPTransfer(
   evt: TransferEvent,
   ctx: PendleMarketContext
 ) {
-  await processLPAccount(evt.args.from, ctx);
-  await processLPAccount(evt.args.to, ctx);
+  await processAllLPAccounts(ctx);
 }
 
 export async function handleMarketRedeemReward(
   evt: RedeemRewardsEvent,
   ctx: PendleMarketContext
 ) {
-  await processLPAccount(evt.args.user, ctx);
+  await processAllLPAccounts(ctx);
 }
 
 export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
   await processAllLPAccounts(ctx);
 }
 
-export async function processAllLPAccounts(ctx: PendleMarketContext) {
+export async function processAllLPAccounts(ctx: EthContext) {
   // might not need to do this on interval since we are doing it on every swap
   const accountSnapshots = await db.asyncFind<AccountSnapshot>({});
   for (const snapshot of accountSnapshots) {

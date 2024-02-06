@@ -16,6 +16,7 @@ export const PENDLE_POOL_ADDRESSES = {
     START_BLOCK: 19105379,
     TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
     EQB_STAKING: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
+    PENPIE_RECEIPT_TOKEN: "0x788d39ebe18bcd1323b9e879fc87ca24746223db",
     LIQUID_LOCKERS: [
         {
             // Penpie
