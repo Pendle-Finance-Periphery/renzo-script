@@ -37,6 +37,8 @@ export async function handleLPTransfer(
   ctx: PendleMarketContext
 ) {
   await processAllLPAccounts(ctx);
+  await processLPAccount(evt.args.from, ctx);
+  await processLPAccount(evt.args.to, ctx);
 }
 
 export async function handleMarketRedeemReward(

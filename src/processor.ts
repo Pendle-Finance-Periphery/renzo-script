@@ -56,8 +56,10 @@ EQBBaseRewardProcessor.bind({
   name: "Equilibria Base Reward",
 }).onEventStaked(async(evt, ctx) => {
   await processAllLPAccounts(ctx);
+  await processLPAccount(evt.args._user, ctx);
 }).onEventWithdrawn(async(evt, ctx) => {
   await processAllLPAccounts(ctx);
+  await processLPAccount(evt.args._user, ctx);
 })
 
 ERC20Processor.bind({
@@ -66,4 +68,8 @@ ERC20Processor.bind({
   name: "Pendle Pie Receipt Token",
 }).onEventTransfer(async(evt, ctx) => {
   await processAllLPAccounts(ctx);
+  await processLPAccount(evt.args.from, ctx);
+  await processLPAccount(evt.args.to, ctx);
+
 });
+console.log()
