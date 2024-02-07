@@ -6,7 +6,7 @@ import { handleSYTransfer } from './handlers/SY.js'
 import { PendleYieldTokenProcessor } from './types/eth/pendleyieldtoken.js'
 import { handleYTRedeemInterest, handleYTTransfer, processAllYTAccounts } from './handlers/YT.js'
 import { PendleMarketProcessor, getPendleMarketContractOnContext } from './types/eth/pendlemarket.js'
-import { handleLPTransfer, handleMarketRedeemReward, handleMarketSwap, processAllLPAccounts, processLPAccount } from './handlers/LP.js'
+import { handleLPTransfer, handleMarketRedeemReward, handleMarketSwap, processAllLPAccounts } from './handlers/LP.js'
 import { EQBBaseRewardProcessor } from './types/eth/eqbbasereward.js'
 import { GLOBAL_CONFIG } from "@sentio/runtime";
 
@@ -55,11 +55,9 @@ EQBBaseRewardProcessor.bind({
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Equilibria Base Reward",
 }).onEventStaked(async(evt, ctx) => {
-  await processAllLPAccounts(ctx);
-  await processLPAccount(evt.args._user, ctx);
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
 }).onEventWithdrawn(async(evt, ctx) => {
-  await processAllLPAccounts(ctx);
-  await processLPAccount(evt.args._user, ctx);
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
 })
 
 ERC20Processor.bind({
@@ -67,9 +65,10 @@ ERC20Processor.bind({
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Pendle Pie Receipt Token",
 }).onEventTransfer(async(evt, ctx) => {
-  await processAllLPAccounts(ctx);
-  await processLPAccount(evt.args.from, ctx);
-  await processLPAccount(evt.args.to, ctx);
+  await processAllLPAccounts(ctx, [
+    evt.args.from.toLowerCase(),
+    evt.args.to.toLowerCase(),
+  ]);
 
 });
 console.log()

@@ -11,14 +11,15 @@ import { getUnixTimestamp, isLiquidLockerAddress } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
+import { getMulticallContractOnContext } from "../types/eth/multicall.js";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
  * So same as Balancer LPT, we need to update all positions on every swap
- * 
+ *
  * Users can further deposit LP to liquid lockers to get back receipt tokens.
  * This should also be handled here.
- * 
+ *
  * Currently for all liquid lockers, 1 receipt token = 1 LP
  */
 
@@ -36,9 +37,10 @@ export async function handleLPTransfer(
   evt: TransferEvent,
   ctx: PendleMarketContext
 ) {
-  await processAllLPAccounts(ctx);
-  await processLPAccount(evt.args.from, ctx);
-  await processLPAccount(evt.args.to, ctx);
+  await processAllLPAccounts(ctx, [
+    evt.args.from.toLowerCase(),
+    evt.args.to.toLowerCase(),
+  ]);
 }
 
 export async function handleMarketRedeemReward(
@@ -52,19 +54,69 @@ export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
   await processAllLPAccounts(ctx);
 }
 
-export async function processAllLPAccounts(ctx: EthContext) {
+export async function processAllLPAccounts(
+  ctx: EthContext,
+  addressesToAdd: string[] = []
+) {
   // might not need to do this on interval since we are doing it on every swap
-  const accountSnapshots = await db.asyncFind<AccountSnapshot>({});
-  for (const snapshot of accountSnapshots) {
-    await processLPAccount(snapshot._id, ctx);
+  const allAddresses = (await db.asyncFind<AccountSnapshot>({}))
+    .map((snapshot) => snapshot._id)
+
+  for(let address of addressesToAdd) {
+    address = address.toLowerCase()
+    if(!allAddresses.includes(address)) {
+      allAddresses.push(address)
+    }
+  }
+  const marketContract = getPendleMarketContractOnContext(
+    ctx,
+    PENDLE_POOL_ADDRESSES.LP
+  );
+
+  const [allUserShares, totalShare, state] = await Promise.all([
+    readAllUserActiveBalances(ctx, allAddresses),
+    marketContract.totalActiveSupply(),
+    marketContract.readState(marketContract.address),
+  ]);
+
+  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    const liquidLockerBal = await marketContract.balanceOf(
+      liquidLocker.address
+    );
+    if (liquidLockerBal == 0n) continue;
+
+    const liquidLockerActiveBal = await marketContract.activeBalance(
+      liquidLocker.address
+    );
+    try {
+      const allUserReceiptTokenBalances = await readAllUserERC20Balances(
+        ctx,
+        allAddresses,
+        liquidLocker.receiptToken
+      );
+      for (let i = 0; i < allAddresses.length; i++) {
+        const userBal = allUserReceiptTokenBalances[i];
+        const userBoostedHolding =
+          (userBal * liquidLockerActiveBal) / liquidLockerBal;
+        allUserShares[i] += userBoostedHolding;
+      }
+    } catch (err) {}
+  }
+
+  const timestamp = getUnixTimestamp(ctx.timestamp);
+  for (let i = 0; i < allAddresses.length; i++) {
+    const account = allAddresses[i];
+    const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
+    await updateAccount(ctx, account, impliedSy, timestamp);
   }
 }
 
-export async function processLPAccount(account: string, ctx: EthContext) {
-  if (isLiquidLockerAddress(account)) return;
-
-  const marketContract = getPendleMarketContractOnContext(ctx, PENDLE_POOL_ADDRESSES.LP);
-  const timestamp = getUnixTimestamp(ctx.timestamp);
+async function updateAccount(
+  ctx: EthContext,
+  account: string,
+  impliedSy: bigint,
+  timestamp: number
+) {
   const snapshot = await db.asyncFindOne<AccountSnapshot>({ _id: account });
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
     updatePoints(
@@ -76,43 +128,79 @@ export async function processLPAccount(account: string, ctx: EthContext) {
       timestamp
     );
   }
-
-  const share = await readUserMarketPosition(account, ctx);
-  const totalShare = await marketContract.totalActiveSupply();
-  const state = await marketContract.readState(marketContract.address);
-  const impliedHolding = (share * state.totalSy) / totalShare;
   const newSnapshot = {
     _id: account,
     lastUpdatedAt: timestamp,
-    lastImpliedHolding: impliedHolding.toString(),
+    lastImpliedHolding: impliedSy.toString(),
   };
-
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
 }
 
-async function readUserMarketPosition(
-  account: string,
-  ctx: EthContext
-): Promise<bigint> {
-  const marketContract = getPendleMarketContractOnContext(ctx, PENDLE_POOL_ADDRESSES.LP);
-  let share = await marketContract.activeBalance(account);
-  for (let liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
-    if (liquidLocker.address == MISC_CONSTS.ZERO_ADDRESS) continue;
-    try {
-      // doing a try catch here since some liquid lockers might be deployed before the others
-      const receiptToken = getERC20ContractOnContext(
-        ctx,
-        liquidLocker.receiptToken
-      );
-      const userBal = await receiptToken.balanceOf(account);
-      const liquidLockerBal = await marketContract.balanceOf(
-        liquidLocker.address
-      );
-      const liquidLockerActiveBal = await marketContract.activeBalance(
-        liquidLocker.address
-      );
-      share += (userBal * liquidLockerActiveBal) / liquidLockerBal;
-    } catch (err) {}
+async function readAllUserActiveBalances(
+  ctx: EthContext,
+  allAddresses: string[]
+): Promise<bigint[]> {
+  const res: bigint[] = [];
+
+  const multicall = getMulticallContractOnContext(
+    ctx,
+    PENDLE_POOL_ADDRESSES.MULTICALL
+  );
+  const market = getPendleMarketContractOnContext(
+    ctx,
+    PENDLE_POOL_ADDRESSES.LP
+  );
+
+  for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
+    const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
+    const calls = batch.map((address) => {
+      return {
+        target: market.address,
+        callData: market.rawContract.interface.encodeFunctionData(
+          "activeBalance",
+          [address]
+        ),
+      };
+    });
+    const output = await multicall.callStatic.tryAggregate(true, calls);
+    res.push(
+      ...output.map((d) => {
+        return BigInt(d.returnData);
+      })
+    );
   }
-  return share;
+  return res;
+}
+
+async function readAllUserERC20Balances(
+  ctx: EthContext,
+  allAddresses: string[],
+  tokenAddress: string
+): Promise<bigint[]> {
+  const res: bigint[] = [];
+
+  const multicall = getMulticallContractOnContext(
+    ctx,
+    PENDLE_POOL_ADDRESSES.MULTICALL
+  );
+  const erc20 = getERC20ContractOnContext(ctx, tokenAddress);
+
+  for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
+    const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
+    const calls = batch.map((address) => {
+      return {
+        target: erc20.address,
+        callData: erc20.rawContract.interface.encodeFunctionData("balanceOf", [
+          address,
+        ]),
+      };
+    });
+    const output = await multicall.callStatic.tryAggregate(true, calls);
+    res.push(
+      ...output.map((d) => {
+        return BigInt(d.returnData);
+      })
+    );
+  }
+  return res;
 }
