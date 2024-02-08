@@ -6,7 +6,7 @@ import {
 } from "../types/eth/pendleyieldtoken.js";
 import { updatePoints } from "../points/point-manager.js";
 import { MISC_CONSTS } from "../consts.js";
-import { getUnixTimestamp } from "../helper.js";
+import { getUnixTimestamp, isPendleAddress } from "../helper.js";
 import { readAllUserERC20Balances, readAllYTPositions } from "../multicall.js";
 
 /**
@@ -28,30 +28,44 @@ export async function handleYTTransfer(
   evt: TransferEvent,
   ctx: PendleYieldTokenContext
 ) {
-  await processAllYTAccounts(ctx, [evt.args.from.toLowerCase(), evt.args.to.toLowerCase()]);
+  await processAllYTAccounts(
+    ctx,
+    [evt.args.from.toLowerCase(), evt.args.to.toLowerCase()],
+    false
+  );
 }
 
 export async function handleYTRedeemInterest(
   evt: RedeemInterestEvent,
   ctx: PendleYieldTokenContext
 ) {
-  await processAllYTAccounts(ctx, [evt.args.user.toLowerCase()]);
+  await processAllYTAccounts(ctx, [evt.args.user.toLowerCase()], false);
 }
 
-export async function processAllYTAccounts(ctx: PendleYieldTokenContext, addressesToAdd: string[] = []) {
-  const allAddresses = (await db.asyncFind<AccountSnapshot>({})).map((x) => x._id);
-  for(let address of addressesToAdd) {
+export async function processAllYTAccounts(
+  ctx: PendleYieldTokenContext,
+  addressesToAdd: string[] = [],
+  shouldIncludeDb: boolean = true
+) {
+  const allAddresses = shouldIncludeDb
+    ? (await db.asyncFind<AccountSnapshot>({})).map((x) => x._id)
+    : [];
+  for (let address of addressesToAdd) {
     address = address.toLowerCase();
-    if (!allAddresses.includes(address)) {
+    if (!allAddresses.includes(address) && !isPendleAddress(address)) {
       allAddresses.push(address);
     }
   }
 
   const timestamp = getUnixTimestamp(ctx.timestamp);
-  const allYTBalances = await readAllUserERC20Balances(ctx, allAddresses, ctx.contract.address);
+  const allYTBalances = await readAllUserERC20Balances(
+    ctx,
+    allAddresses,
+    ctx.contract.address
+  );
   const allYTPositions = await readAllYTPositions(ctx, allAddresses);
 
-  for(let i = 0; i < allAddresses.length; i++) {
+  for (let i = 0; i < allAddresses.length; i++) {
     const address = allAddresses[i];
     const balance = allYTBalances[i];
     const interestData = allYTPositions[i];
@@ -68,7 +82,11 @@ export async function processAllYTAccounts(ctx: PendleYieldTokenContext, address
       );
     }
 
-    const impliedHolding = (balance * MISC_CONSTS.ONE_E18) / interestData.lastPYIndex + interestData.accruedInterest;
+    if (interestData.lastPYIndex == 0n) continue;
+
+    const impliedHolding =
+      (balance * MISC_CONSTS.ONE_E18) / interestData.lastPYIndex +
+      interestData.accruedInterest;
 
     const newSnapshot = {
       _id: address,
@@ -78,4 +96,3 @@ export async function processAllYTAccounts(ctx: PendleYieldTokenContext, address
     await db.asyncUpdate({ _id: address }, newSnapshot, { upsert: true });
   }
 }
-
