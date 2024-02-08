@@ -32,9 +32,9 @@ PendleYieldTokenProcessor.bind({
   await handleYTTransfer(evt, ctx);
 }).onEventRedeemInterest(async(evt, ctx) => {
   await handleYTRedeemInterest(evt, ctx);
-}).onTimeInterval(async(_, ctx) => {
+}).onEventNewInterestIndex(async(_, ctx) => {
   await processAllYTAccounts(ctx);
-}, MISC_CONSTS.ONE_DAY_IN_MINUTE);
+});
 
 PendleMarketProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.LP,
@@ -44,9 +44,7 @@ PendleMarketProcessor.bind({
   await handleLPTransfer(evt, ctx);
 }).onEventRedeemRewards(async(evt, ctx) => {
   await handleMarketRedeemReward(evt, ctx);
-}).onTimeInterval(async(_, ctx) => {
-  await processAllLPAccounts(ctx);
-}, MISC_CONSTS.ONE_DAY_IN_MINUTE).onEventSwap(async(evt, ctx) => {
+}).onEventSwap(async(evt, ctx) => {
   await handleMarketSwap(evt, ctx);
 });
 
@@ -69,6 +67,5 @@ ERC20Processor.bind({
     evt.args.from.toLowerCase(),
     evt.args.to.toLowerCase(),
   ]);
-
 });
 console.log()

@@ -12,6 +12,7 @@ import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
 import { getMulticallContractOnContext } from "../types/eth/multicall.js";
+import { readAllUserActiveBalances, readAllUserERC20Balances } from "../multicall.js";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
@@ -64,7 +65,7 @@ export async function processAllLPAccounts(
 
   for(let address of addressesToAdd) {
     address = address.toLowerCase()
-    if(!allAddresses.includes(address)) {
+    if(!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
       allAddresses.push(address)
     }
   }
@@ -134,73 +135,4 @@ async function updateAccount(
     lastImpliedHolding: impliedSy.toString(),
   };
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
-}
-
-async function readAllUserActiveBalances(
-  ctx: EthContext,
-  allAddresses: string[]
-): Promise<bigint[]> {
-  const res: bigint[] = [];
-
-  const multicall = getMulticallContractOnContext(
-    ctx,
-    PENDLE_POOL_ADDRESSES.MULTICALL
-  );
-  const market = getPendleMarketContractOnContext(
-    ctx,
-    PENDLE_POOL_ADDRESSES.LP
-  );
-
-  for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
-    const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
-    const calls = batch.map((address) => {
-      return {
-        target: market.address,
-        callData: market.rawContract.interface.encodeFunctionData(
-          "activeBalance",
-          [address]
-        ),
-      };
-    });
-    const output = await multicall.callStatic.tryAggregate(true, calls);
-    res.push(
-      ...output.map((d) => {
-        return BigInt(d.returnData);
-      })
-    );
-  }
-  return res;
-}
-
-async function readAllUserERC20Balances(
-  ctx: EthContext,
-  allAddresses: string[],
-  tokenAddress: string
-): Promise<bigint[]> {
-  const res: bigint[] = [];
-
-  const multicall = getMulticallContractOnContext(
-    ctx,
-    PENDLE_POOL_ADDRESSES.MULTICALL
-  );
-  const erc20 = getERC20ContractOnContext(ctx, tokenAddress);
-
-  for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
-    const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
-    const calls = batch.map((address) => {
-      return {
-        target: erc20.address,
-        callData: erc20.rawContract.interface.encodeFunctionData("balanceOf", [
-          address,
-        ]),
-      };
-    });
-    const output = await multicall.callStatic.tryAggregate(true, calls);
-    res.push(
-      ...output.map((d) => {
-        return BigInt(d.returnData);
-      })
-    );
-  }
-  return res;
 }
