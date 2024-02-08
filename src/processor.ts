@@ -33,6 +33,9 @@ PendleYieldTokenProcessor.bind({
 }).onEventRedeemInterest(async(evt, ctx) => {
   await handleYTRedeemInterest(evt, ctx);
 }).onEventNewInterestIndex(async(_, ctx) => {
+  const YTIndex = await ctx.contract.pyIndexStored();
+  const YTIndexPreviousBlock = await ctx.contract.pyIndexStored({blockTag: ctx.blockNumber - 1});
+  if (YTIndex == YTIndexPreviousBlock) return;
   await processAllYTAccounts(ctx);
 });
 
