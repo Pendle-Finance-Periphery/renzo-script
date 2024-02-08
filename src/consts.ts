@@ -18,6 +18,7 @@ export const PENDLE_POOL_ADDRESSES = {
     TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
     EQB_STAKING: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
     PENPIE_RECEIPT_TOKEN: "0x788d39ebe18bcd1323b9e879fc87ca24746223db",
+    STAKEDAO_RECEIPT_TOKEN: "0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a",
     MULTICALL: "0xca11bde05977b3631167028862be2a173976ca11",
     LIQUID_LOCKERS: [
         {
@@ -30,9 +31,9 @@ export const PENDLE_POOL_ADDRESSES = {
             address: '0x64627901dadb46ed7f275fd4fc87d086cff1e6e3',
             receiptToken: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
         },
-        {
-            address: MISC_CONSTS.ZERO_ADDRESS,
-            receiptToken: MISC_CONSTS.ZERO_ADDRESS,
+        {   // STAKEDAO
+            address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
+            receiptToken: '0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a',
         }
     ]
 }
