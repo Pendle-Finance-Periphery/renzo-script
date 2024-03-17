@@ -47,6 +47,11 @@ export async function processAllYTAccounts(
   addressesToAdd: string[] = [],
   shouldIncludeDb: boolean = true
 ) {
+
+  if ((await ctx.contract.isExpired())) {
+    return;
+  }
+
   const allAddresses = shouldIncludeDb
     ? (await db.asyncFind<AccountSnapshot>({})).map((x) => x._id)
     : [];
