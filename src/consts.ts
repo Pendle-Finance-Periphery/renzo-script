@@ -23,7 +23,7 @@ export const PENDLE_POOL_ADDRESSES = {
     LIQUID_LOCKERS: [
         {
             // Penpie
-            address: "0x6e799758cee75dae3d84e09d40dc416ecf713652",
+            address: "0x6db96bbeb081d2a85e0954c252f2c1dc108b3f81",
             receiptToken: "0xf5250766b344568f8b4d783b7cbbc6415e93dd4d",
         },
         {
