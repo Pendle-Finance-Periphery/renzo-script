@@ -20,7 +20,7 @@ function calcPointsFromHolding(
   ];
 }
 
-export async function updatePoints(
+export function updatePoints(
   ctx: EthContext,
   label: string,
   account: string,
