@@ -7,12 +7,13 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp, isLiquidLockerAddress } from "../helper.js";
+import { getUnixTimestamp, isLiquidLockerAddress, isSentioInternalError } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
 import { getMulticallContractOnContext } from "../types/eth/multicall.js";
 import { readAllUserActiveBalances, readAllUserERC20Balances } from "../multicall.js";
+import { EVENT_USER_SHARE, POINT_SOURCE_LP } from "../types.js";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
@@ -28,6 +29,9 @@ const db = new AsyncNedb({
   filename: "/data/pendle-accounts-lp.db",
   autoload: true,
 });
+
+db.persistence.setAutocompactionInterval(60 * 1000);
+
 type AccountSnapshot = {
   _id: string;
   lastUpdatedAt: number;
@@ -63,9 +67,9 @@ export async function processAllLPAccounts(
   const allAddresses = (await db.asyncFind<AccountSnapshot>({}))
     .map((snapshot) => snapshot._id)
 
-  for(let address of addressesToAdd) {
+  for (let address of addressesToAdd) {
     address = address.toLowerCase()
-    if(!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
+    if (!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
       allAddresses.push(address)
     }
   }
@@ -101,7 +105,11 @@ export async function processAllLPAccounts(
           (userBal * liquidLockerActiveBal) / liquidLockerBal;
         allUserShares[i] += userBoostedHolding;
       }
-    } catch (err) {}
+    } catch (err) { 
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
   }
 
   const timestamp = getUnixTimestamp(ctx.timestamp);
@@ -122,7 +130,7 @@ async function updateAccount(
   if (snapshot && snapshot.lastUpdatedAt < timestamp) {
     updatePoints(
       ctx,
-      "LP",
+      POINT_SOURCE_LP,
       account,
       BigInt(snapshot.lastImpliedHolding),
       BigInt(timestamp - snapshot.lastUpdatedAt),
