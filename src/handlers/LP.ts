@@ -59,8 +59,14 @@ export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
   await processAllLPAccounts(ctx);
 }
 
-export async function processAllLPAccounts(
+export async function processAllLPAccounts(ctx: EthContext, addressesToAdd: string[] = []) {
+  processMarketAccounts(ctx, PENDLE_POOL_ADDRESSES.LP, addressesToAdd);
+  processMarketAccounts(ctx, PENDLE_POOL_ADDRESSES.LP_NEW, addressesToAdd); 
+}
+
+export async function processMarketAccounts(
   ctx: EthContext,
+  marketAddr: string,
   addressesToAdd: string[] = []
 ) {
   // might not need to do this on interval since we are doing it on every swap
@@ -75,11 +81,11 @@ export async function processAllLPAccounts(
   }
   const marketContract = getPendleMarketContractOnContext(
     ctx,
-    PENDLE_POOL_ADDRESSES.LP
+    marketAddr
   );
 
   const [allUserShares, totalShare, state] = await Promise.all([
-    readAllUserActiveBalances(ctx, allAddresses),
+    readAllUserActiveBalances(ctx, marketAddr, allAddresses),
     marketContract.totalActiveSupply(),
     marketContract.readState(marketContract.address),
   ]);
