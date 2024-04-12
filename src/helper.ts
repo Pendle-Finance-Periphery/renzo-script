@@ -5,7 +5,8 @@ export function isPendleAddress(addr: string) {
     addr = addr.toLowerCase();
     return addr == PENDLE_POOL_ADDRESSES.SY ||
         addr == PENDLE_POOL_ADDRESSES.YT ||
-        addr == PENDLE_POOL_ADDRESSES.LP;
+        addr == PENDLE_POOL_ADDRESSES.LP || 
+        addr == PENDLE_POOL_ADDRESSES.LP_NEW;
 }
 
 // @TODO: to modify this when liquid lockers launch

@@ -43,18 +43,22 @@ PendleYieldTokenProcessor.bind({
   await processAllYTAccounts(ctx);
 });
 
-PendleMarketProcessor.bind({
-  address: PENDLE_POOL_ADDRESSES.LP,
-  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
-  name: "Pendle Pool LP",
-  network: EthChainId.ARBITRUM
-}).onEventTransfer(async(evt, ctx) => {
-  await handleLPTransfer(evt, ctx);
-}).onEventRedeemRewards(async(evt, ctx) => {
-  await handleMarketRedeemReward(evt, ctx);
-}).onEventSwap(async(evt, ctx) => {
-  await handleMarketSwap(evt, ctx);
-});
+
+for(let market of [PENDLE_POOL_ADDRESSES.LP, PENDLE_POOL_ADDRESSES.LP_NEW]) {
+  PendleMarketProcessor.bind({
+    address: market,
+    startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+    name: "Pendle Pool LP",
+    network: EthChainId.ARBITRUM
+  }).onEventTransfer(async(evt, ctx) => {
+    await handleLPTransfer(evt, ctx);
+  }).onEventRedeemRewards(async(evt, ctx) => {
+    await handleMarketRedeemReward(evt, ctx);
+  }).onEventSwap(async(evt, ctx) => {
+    await handleMarketSwap(evt, ctx);
+  });
+}
+
 
 EQBBaseRewardProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.EQB_STAKING,
@@ -67,10 +71,21 @@ EQBBaseRewardProcessor.bind({
   await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
 })
 
+EQBBaseRewardProcessor.bind({
+  address: PENDLE_POOL_ADDRESSES.EQB_STAKING_NEW,
+  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+  name: "Equilibria Base Reward",
+  network: EthChainId.ARBITRUM
+}).onEventStaked(async(evt, ctx) => {
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
+}).onEventWithdrawn(async(evt, ctx) => {
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
+})
+
 ERC20Processor.bind({
   address: PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN,
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
-  name: "Pendle Pie Receipt Token",
+  name: "Penpie Receipt Token",
   network: EthChainId.ARBITRUM
 }).onEventTransfer(async(evt, ctx) => {
   await processAllLPAccounts(ctx, [
@@ -78,6 +93,19 @@ ERC20Processor.bind({
     evt.args.to.toLowerCase(),
   ]);
 });
+
+ERC20Processor.bind({
+  address: PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN_NEW,
+  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+  name: "Penpie Receipt Token",
+  network: EthChainId.ARBITRUM
+}).onEventTransfer(async(evt, ctx) => {
+  await processAllLPAccounts(ctx, [
+    evt.args.from.toLowerCase(),
+    evt.args.to.toLowerCase(),
+  ]);
+});
+
 
 // ERC20Processor.bind({
 //   address: PENDLE_POOL_ADDRESSES.STAKEDAO_RECEIPT_TOKEN,
