@@ -91,6 +91,7 @@ export async function processMarketAccounts(
   ]);
 
   for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    if (liquidLocker.lpAddress != marketAddr) continue;
     const liquidLockerBal = await marketContract.balanceOf(
       liquidLocker.address
     );
