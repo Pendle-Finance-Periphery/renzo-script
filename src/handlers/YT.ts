@@ -73,8 +73,8 @@ export async function processAllYTAccounts(
   );
   const allYTPositions = await readAllYTPositions(ctx, allAddresses);
 
-  for (let i = 0; i < allAddresses.length; i++) {
-    const address = allAddresses[i];
+
+  await Promise.all(allAddresses.map(async (address, i) => {
     const balance = allYTBalances[i];
     const interestData = allYTPositions[i];
 
@@ -90,7 +90,7 @@ export async function processAllYTAccounts(
       );
     }
 
-    if (interestData.lastPYIndex == 0n) continue;
+    if (interestData.lastPYIndex == 0n) return;
 
     const impliedHolding =
       (balance * MISC_CONSTS.ONE_E18) / interestData.lastPYIndex +
@@ -102,5 +102,10 @@ export async function processAllYTAccounts(
       lastImpliedHolding: impliedHolding.toString(),
     };
     await db.asyncUpdate({ _id: address }, newSnapshot, { upsert: true });
-  }
+  }));
+
+  // for (let i = 0; i < allAddresses.length; i++) {
+  //   const address = allAddresses[i];
+
+  // }
 }

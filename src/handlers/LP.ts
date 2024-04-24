@@ -90,12 +90,12 @@ export async function processMarketAccounts(
     marketContract.readState(marketContract.address),
   ]);
 
-  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
-    if (liquidLocker.lpAddress != marketAddr) continue;
+  await Promise.all(PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.map(async (liquidLocker) => {
+    if (liquidLocker.lpAddress != marketAddr) return;
     const liquidLockerBal = await marketContract.balanceOf(
       liquidLocker.address
     );
-    if (liquidLockerBal == 0n) continue;
+    if (liquidLockerBal == 0n) return;
 
     const liquidLockerActiveBal = await marketContract.activeBalance(
       liquidLocker.address
@@ -117,14 +117,19 @@ export async function processMarketAccounts(
         throw err;
       }
     }
-  }
+  }));
+
+  // for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    
+  // }
+
+
 
   const timestamp = getUnixTimestamp(ctx.timestamp);
-  for (let i = 0; i < allAddresses.length; i++) {
-    const account = allAddresses[i];
+  await Promise.all(allAddresses.map(async (account, i) => {
     const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
     await updateAccount(ctx, account, impliedSy, timestamp);
-  }
+  }));
 }
 
 async function updateAccount(
