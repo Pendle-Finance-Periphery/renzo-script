@@ -7,7 +7,7 @@ import {
   getPendleMarketContractOnContext,
 } from "../types/eth/pendlemarket.js";
 import { updatePoints } from "../points/point-manager.js";
-import { getUnixTimestamp, isLiquidLockerAddress, isSentioInternalError } from "../helper.js";
+import { getUnixTimestamp, isLiquidLockerAddress, isPendleAddress, isSentioInternalError } from "../helper.js";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
@@ -30,7 +30,14 @@ const db = new AsyncNedb({
   autoload: true,
 });
 
+const activeBalanceDb = new AsyncNedb({
+  filename: "/data/pendle-active-balances-lp.db",
+  autoload: true,
+});
+
+
 db.persistence.setAutocompactionInterval(60 * 1000);
+activeBalanceDb.persistence.setAutocompactionInterval(60 * 1000);
 
 type AccountSnapshot = {
   _id: string;
@@ -38,85 +45,65 @@ type AccountSnapshot = {
   lastImpliedHolding: string;
 };
 
+type AccountActiveBalance = {
+  _id: string;
+  activeBalances: string[];
+  liquidLockerTokenBalances: string[];
+}
+
 export async function handleLPTransfer(
   evt: TransferEvent,
   ctx: PendleMarketContext
 ) {
-  await processAllLPAccounts(ctx, [
-    evt.args.from.toLowerCase(),
-    evt.args.to.toLowerCase(),
-  ]);
+  await fetchAccountsAndUpdatePoints(ctx, [evt.args.from, evt.args.to]);
 }
 
 export async function handleMarketRedeemReward(
   evt: RedeemRewardsEvent,
   ctx: PendleMarketContext
 ) {
-  await processAllLPAccounts(ctx);
+  await fetchLatestAccountActiveBalance(ctx, evt.args.user);
+  await updateAllUserPoints(ctx);
 }
 
 export async function handleMarketSwap(_: SwapEvent, ctx: PendleMarketContext) {
-  await processAllLPAccounts(ctx);
+  await updateAllUserPoints(ctx);
 }
 
-export async function processAllLPAccounts(
-  ctx: EthContext,
-  addressesToAdd: string[] = []
-) {
-  // might not need to do this on interval since we are doing it on every swap
-  const allAddresses = (await db.asyncFind<AccountSnapshot>({}))
-    .map((snapshot) => snapshot._id)
+export async function fetchAccountsAndUpdatePoints(ctx: EthContext, accounts: string[]): Promise<void> {
+  await Promise.all(accounts.map((account) => fetchLatestAccountActiveBalance(ctx, account)));
+  await updateAllUserPoints(ctx);
+}
 
-  for (let address of addressesToAdd) {
-    address = address.toLowerCase()
-    if (!allAddresses.includes(address) && !isLiquidLockerAddress(address)) {
-      allAddresses.push(address)
+async function updateAllUserPoints(ctx: EthContext) {
+  const allActiveBalances = await activeBalanceDb.asyncFind<AccountActiveBalance>({});
+  const allSnapshots = await db.asyncFind<AccountSnapshot>({});
+
+  const accountSnapshots = new Map<string, AccountSnapshot>();
+  allSnapshots.forEach((snapshot) => {
+    accountSnapshots.set(snapshot._id, snapshot);
+  });
+
+  const metadats = await getMarketMetadatas(ctx);
+  for (let activeBalanceInfo of allActiveBalances) {
+    const account = activeBalanceInfo._id;
+    const activeBalances = activeBalanceInfo.activeBalances.map((bal) => BigInt(bal));
+    const liquidLockerTokenBalances = activeBalanceInfo.liquidLockerTokenBalances.map((bal) => BigInt(bal));
+
+    let impliedHolding = 0n;
+    for (let i = 0; i < activeBalances.length; ++i) {
+      if (activeBalances[i] == 0n) continue;
+      const marketInfo = metadats.marketInfos[i];
+      impliedHolding += (activeBalances[i] * marketInfo.totalSy) / marketInfo.totalActiveSupply;
     }
-  }
-  const marketContract = getPendleMarketContractOnContext(
-    ctx,
-    PENDLE_POOL_ADDRESSES.LP
-  );
 
-  const [allUserShares, totalShare, state] = await Promise.all([
-    readAllUserActiveBalances(ctx, allAddresses),
-    marketContract.totalActiveSupply(),
-    marketContract.readState(marketContract.address),
-  ]);
-
-  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
-    const liquidLockerBal = await marketContract.balanceOf(
-      liquidLocker.address
-    );
-    if (liquidLockerBal == 0n) continue;
-
-    const liquidLockerActiveBal = await marketContract.activeBalance(
-      liquidLocker.address
-    );
-    try {
-      const allUserReceiptTokenBalances = await readAllUserERC20Balances(
-        ctx,
-        allAddresses,
-        liquidLocker.receiptToken
-      );
-      for (let i = 0; i < allAddresses.length; i++) {
-        const userBal = allUserReceiptTokenBalances[i];
-        const userBoostedHolding =
-          (userBal * liquidLockerActiveBal) / liquidLockerBal;
-        allUserShares[i] += userBoostedHolding;
-      }
-    } catch (err) { 
-      if (isSentioInternalError(err)) {
-        throw err;
-      }
+    for (let i = 0; i < liquidLockerTokenBalances.length; ++i) {
+      if (liquidLockerTokenBalances[i] == 0n) continue;
+      const liquidLockerInfo = metadats.liquidLockerInfos[i];
+      impliedHolding += (liquidLockerTokenBalances[i] * liquidLockerInfo.totalSy) / liquidLockerInfo.totalSupply;
     }
-  }
 
-  const timestamp = getUnixTimestamp(ctx.timestamp);
-  for (let i = 0; i < allAddresses.length; i++) {
-    const account = allAddresses[i];
-    const impliedSy = (allUserShares[i] * state.totalSy) / totalShare;
-    await updateAccount(ctx, account, impliedSy, timestamp);
+    await updateAccount(ctx, account, impliedHolding, getUnixTimestamp(ctx.timestamp));
   }
 }
 
@@ -144,3 +131,92 @@ async function updateAccount(
   };
   await db.asyncUpdate({ _id: account }, newSnapshot, { upsert: true });
 }
+
+async function getMarketMetadatas(ctx: EthContext) {
+  const marketInfos = [];
+  const liquidLockerInfos = [];
+
+  for (const lpToken of [PENDLE_POOL_ADDRESSES.LP, PENDLE_POOL_ADDRESSES.LP_NEW]) {
+    const info = {
+      totalActiveSupply: 0n,
+      totalSy: 0n,
+    }
+    try {
+      const marketContract = getPendleMarketContractOnContext(ctx, lpToken);
+      info.totalActiveSupply = await marketContract.totalActiveSupply();
+      const state = await marketContract.readState(marketContract.address);
+      info.totalSy = state.totalSy;
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
+    marketInfos.push(info);
+  }
+
+  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    const info = {
+      totalSupply: 0n,
+      totalSy: 0n,
+    }
+    try {
+      const receiptToken = getERC20ContractOnContext(ctx, liquidLocker.receiptToken);
+      const marketContract = getPendleMarketContractOnContext(ctx, liquidLocker.lpAddress);
+      const state = await marketContract.readState(marketContract.address);
+      const activeBalance = await marketContract.activeBalance(liquidLocker.address);
+      const totalActiveSupply = await marketContract.totalActiveSupply();
+
+      info.totalSupply = await receiptToken.totalSupply();
+      info.totalSy = activeBalance * state.totalSy / totalActiveSupply;
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
+    liquidLockerInfos.push(info);
+  }
+
+  return {
+    marketInfos,
+    liquidLockerInfos,
+  }
+}
+
+async function fetchLatestAccountActiveBalance(ctx: EthContext, account: string): Promise<void> {
+  account = account.toLowerCase();
+  if (account == MISC_CONSTS.ZERO_ADDRESS || isPendleAddress(account) || isLiquidLockerAddress(account)) return;
+
+  const accountActiveBalance: AccountActiveBalance = {
+    _id: account,
+    activeBalances: [],
+    liquidLockerTokenBalances: [],
+  };
+
+  for (const lpToken of [PENDLE_POOL_ADDRESSES.LP, PENDLE_POOL_ADDRESSES.LP_NEW]) {
+    let bal = 0n;
+    try {
+      const marketContract = getPendleMarketContractOnContext(ctx, lpToken);
+      bal = await marketContract.activeBalance(account);
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
+    accountActiveBalance.activeBalances.push(bal.toString());
+  }
+
+  for (const liquidLocker of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    let bal = 0n;
+    try {
+      const receiptToken = getERC20ContractOnContext(ctx, liquidLocker.receiptToken);
+      bal = await receiptToken.balanceOf(account);
+    } catch (err) {
+      if (isSentioInternalError(err)) {
+        throw err;
+      }
+    }
+    accountActiveBalance.liquidLockerTokenBalances.push(bal.toString());
+  }
+  await activeBalanceDb.asyncUpdate({ _id: account }, accountActiveBalance, { upsert: true });
+}
+
