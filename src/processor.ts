@@ -15,15 +15,6 @@ GLOBAL_CONFIG.execution = {
 };
 
 
-ERC20Processor.bind({
-  address: PENDLE_POOL_ADDRESSES.SY,
-  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
-  name: "Pendle Pool SY",
-}).onEventTransfer(async(evt, ctx) => {
-  await handleSYTransfer(evt, ctx);
-})
-
-
 PendleYieldTokenProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.YT,
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
