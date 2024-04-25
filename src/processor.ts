@@ -46,6 +46,7 @@ EQBBaseRewardProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.EQB_STAKING,
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Equilibria Base Reward",
+  network: EthChainId.BINANCE
 }).onEventStaked(async(evt, ctx) => {
   await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
 }).onEventWithdrawn(async(evt, ctx) => {
