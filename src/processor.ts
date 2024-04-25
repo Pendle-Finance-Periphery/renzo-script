@@ -45,15 +45,15 @@ PendleMarketProcessor.bind({
   await handleMarketSwap(evt, ctx);
 });
 
-// EQBBaseRewardProcessor.bind({
-//   address: PENDLE_POOL_ADDRESSES.EQB_STAKING,
-//   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
-//   name: "Equilibria Base Reward",
-// }).onEventStaked(async(evt, ctx) => {
-//   await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
-// }).onEventWithdrawn(async(evt, ctx) => {
-//   await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
-// })
+EQBBaseRewardProcessor.bind({
+  address: PENDLE_POOL_ADDRESSES.EQB_STAKING,
+  startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
+  name: "Equilibria Base Reward",
+}).onEventStaked(async(evt, ctx) => {
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
+}).onEventWithdrawn(async(evt, ctx) => {
+  await processAllLPAccounts(ctx, [evt.args._user.toLowerCase()]);
+})
 
 // ERC20Processor.bind({
 //   address: PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN,
