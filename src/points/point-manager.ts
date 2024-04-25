@@ -15,8 +15,8 @@ function calcPointsFromHolding(
   holdingPeriod: bigint
 ): [bigint, bigint] {
   return [
-    amountEzEthHolding * holdingPeriod,
-    amountEzEthHolding * holdingPeriod,
+    amountEzEthHolding * holdingPeriod * 3n / 3600n,
+    amountEzEthHolding * holdingPeriod / 3600n,
   ];
 }
 
@@ -85,8 +85,8 @@ function increasePoint(
     account: account.toLowerCase(),
     amountEzEthHolding: amountEzEthHolding.scaleDown(18),
     holdingPeriod,
-    ezPoint,
-    elPoint,
+    ezPoint: ezPoint.scaleDown(18),
+    elPoint: elPoint.scaleDown(18),
     updatedAt,
     severity: LogLevel.INFO,
   });
