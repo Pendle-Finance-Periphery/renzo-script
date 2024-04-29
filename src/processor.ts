@@ -1,7 +1,7 @@
 import { Counter, Gauge } from "@sentio/sdk";
 import { ERC20Processor } from "@sentio/sdk/eth/builtin";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "./consts.js";
-import { isPendleAddress } from "./helper.js";
+import { getUnixTimestamp, isPendleAddress } from "./helper.js";
 import { handleSYTransfer } from "./handlers/SY.js";
 import { PendleYieldTokenProcessor } from "./types/eth/pendleyieldtoken.js";
 import {
@@ -44,7 +44,13 @@ PendleYieldTokenProcessor.bind({
     await updateAllYTAccounts(ctx, [], true);
     await updateAllLPAccounts(ctx);
     await emitAllPoints(ctx);
-  }, 60, MISC_CONSTS.ONE_DAY_IN_MINUTE);
+  }, MISC_CONSTS.ONE_DAY_IN_MINUTE).onBlockInterval(async (_, ctx) => {
+    const diff = PENDLE_POOL_ADDRESSES.EXPIRY - getUnixTimestamp(ctx.timestamp);
+    if (diff < 0 || diff > 30) return;
+    await updateAllYTAccounts(ctx, [], true);
+    await updateAllLPAccounts(ctx);
+    await emitAllPoints(ctx);
+  }, 20, 10000);
 
 for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
   PendleMarketProcessor.bind({
