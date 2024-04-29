@@ -70,19 +70,18 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@aptos-labs/ts-sdk@npm:~1.10.0":
-  version: 1.10.0
-  resolution: "@aptos-labs/ts-sdk@npm:1.10.0"
+"@aptos-labs/ts-sdk@npm:~1.13.0":
+  version: 1.13.1
+  resolution: "@aptos-labs/ts-sdk@npm:1.13.1"
   dependencies:
     "@aptos-labs/aptos-client": ^0.1.0
-    "@noble/curves": ^1.2.0
-    "@noble/hashes": ^1.3.3
-    "@scure/bip32": ^1.3.3
-    "@scure/bip39": ^1.2.1
+    "@noble/curves": ^1.4.0
+    "@noble/hashes": ^1.4.0
+    "@scure/bip32": ^1.4.0
+    "@scure/bip39": ^1.3.0
     eventemitter3: ^5.0.1
     form-data: ^4.0.0
-    tweetnacl: ^1.0.3
-  checksum: 5a85c4f03fc2e20f94479251ab8d616bf5a255c21de0b48db0c7901c805d7e7393b18ed41494649b132e18bef7dd68dbf113bb2b6d6b3b464ef09f90adcc3a4c
+  checksum: 028e2adcd5e5074b291d7e377f6ab8d6d36e870c2c62b73901e8de1c6bf3700f109f76d776e87c775346d787121f96ea763a6fc8bbf6d017468465bb272dbadb
   languageName: node
   linkType: hard
 
@@ -1120,7 +1119,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/curves@npm:^1.1.0, @noble/curves@npm:^1.2.0, @noble/curves@npm:~1.4.0":
+"@noble/curves@npm:^1.1.0, @noble/curves@npm:^1.2.0, @noble/curves@npm:^1.4.0, @noble/curves@npm:~1.4.0":
   version: 1.4.0
   resolution: "@noble/curves@npm:1.4.0"
   dependencies:
@@ -1136,7 +1135,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@noble/hashes@npm:1.4.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.3.3, @noble/hashes@npm:~1.4.0":
+"@noble/hashes@npm:1.4.0, @noble/hashes@npm:^1.3.1, @noble/hashes@npm:^1.3.2, @noble/hashes@npm:^1.3.3, @noble/hashes@npm:^1.4.0, @noble/hashes@npm:~1.4.0":
   version: 1.4.0
   resolution: "@noble/hashes@npm:1.4.0"
   checksum: 8ba816ae26c90764b8c42493eea383716396096c5f7ba6bea559993194f49d80a73c081f315f4c367e51bd2d5891700bcdfa816b421d24ab45b41cb03e4f3342
@@ -1363,7 +1362,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@scure/bip32@npm:^1.3.1, @scure/bip32@npm:^1.3.3":
+"@scure/bip32@npm:^1.3.1, @scure/bip32@npm:^1.3.3, @scure/bip32@npm:^1.4.0":
   version: 1.4.0
   resolution: "@scure/bip32@npm:1.4.0"
   dependencies:
@@ -1374,7 +1373,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@scure/bip39@npm:^1.2.1":
+"@scure/bip39@npm:^1.2.1, @scure/bip39@npm:^1.3.0":
   version: 1.3.0
   resolution: "@scure/bip39@npm:1.3.0"
   dependencies:
@@ -1444,25 +1443,25 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@sentio/protos@npm:2.33.0":
-  version: 2.33.0
-  resolution: "@sentio/protos@npm:2.33.0"
+"@sentio/protos@npm:2.35.0":
+  version: 2.35.0
+  resolution: "@sentio/protos@npm:2.35.0"
   dependencies:
     google-protobuf: ^3.21.2
     long: ^5.2.3
     nice-grpc: ^2.1.7
     nice-grpc-common: ^2.0.2
     protobufjs: ^7.2.6
-  checksum: f5c6da46dc639d4636dae8f05d677943d03fba562710ee5a9c1a18784c10b7238e5c96301bc7ed0b4cc33fb3941a55ace5c8b3130582e14c71c79484d7062e1a
+  checksum: 2ff2a49f930e0efd0bbb715ba5f975515fcca666f6cbefc0a087fcdbe94d7ed2df9934b5f8cf6dc51e8627c8d71aa647755afd717692bb80228e53ba3704cfe0
   languageName: node
   linkType: hard
 
-"@sentio/runtime@npm:^2.33.0":
-  version: 2.33.0
-  resolution: "@sentio/runtime@npm:2.33.0"
+"@sentio/runtime@npm:^2.35.0":
+  version: 2.35.0
+  resolution: "@sentio/runtime@npm:2.35.0"
   dependencies:
     "@grpc/grpc-js": ^1.9.14
-    "@sentio/protos": 2.33.0
+    "@sentio/protos": 2.35.0
     command-line-args: ^5.2.1
     command-line-usage: ^7.0.1
     fs-extra: ^11.2.0
@@ -1478,30 +1477,30 @@ __metadata:
     utility-types: ^3.11.0
     winston: ^3.11.0
   peerDependencies:
-    "@sentio/sdk": ^2.33.0
+    "@sentio/sdk": ^2.35.0
   bin:
     processor-runner: lib/processor-runner.js
-  checksum: 91d492e9baec3303f39e617118996f13faa10c2dd81f1b3062dc5ca90e42d4845fa8161f15d4379422317316db9be50e14f4b4a096bf539dda74fcf31e84c28a
+  checksum: ec11cf9ef7a7d5699876abd8d93386a581ef5ee124b91615c22039f9bb7f2bce4cde4eee6db002db5cc4d7c98652257c16affdec2b86b68c8171ad9bc09c4813
   languageName: node
   linkType: hard
 
-"@sentio/sdk@npm:^2.32.5":
-  version: 2.33.0
-  resolution: "@sentio/sdk@npm:2.33.0"
+"@sentio/sdk@npm:^2.34.1":
+  version: 2.35.0
+  resolution: "@sentio/sdk@npm:2.35.0"
   dependencies:
-    "@aptos-labs/ts-sdk": ~1.10.0
+    "@aptos-labs/ts-sdk": ~1.13.0
     "@coral-xyz/borsh": ^0.29.0
     "@mysten/sui.js": ~0.51.0
     "@project-serum/anchor": ^0.26.0
     "@sentio/bigdecimal": 9.1.1-patch.3
     "@sentio/chain": ^1.0.16
     "@sentio/ethers-v6": ^1.0.29
-    "@sentio/protos": 2.33.0
-    "@sentio/runtime": ^2.33.0
-    "@solana/web3.js": ^1.89.1
-    "@typemove/aptos": ~1.5.5
-    "@typemove/move": ~1.5.5
-    "@typemove/sui": ~1.5.5
+    "@sentio/protos": 2.35.0
+    "@sentio/runtime": ^2.35.0
+    "@solana/web3.js": 1.89.1
+    "@typemove/aptos": ~1.5.6
+    "@typemove/move": ~1.5.6
+    "@typemove/sui": ~1.5.6
     bs58: ^5.0.0
     chalk: ^5.3.0
     csv-parse: ^5.5.3
@@ -1525,7 +1524,7 @@ __metadata:
     yaml: ^2.3.4
   peerDependencies:
     tsup: "*"
-  checksum: bc06b1c1ebb64883a38f52a50bafe50657e8854e978ec088cc605a6913464928a62745ef0b0d4e29231a31e18c252d09611f1373ecd6218eee01e85dabe341c6
+  checksum: aa3b18203c4bea8d0ae06d8e651db1c1b56ea4c5429c2cdc3c1d8e175734e86b884e87033ac106ef435ac99539dfddc5f403a81774faea219c8b6de84751978f
   languageName: node
   linkType: hard
 
@@ -1570,7 +1569,30 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@solana/web3.js@npm:^1.68.0, @solana/web3.js@npm:^1.89.1":
+"@solana/web3.js@npm:1.89.1":
+  version: 1.89.1
+  resolution: "@solana/web3.js@npm:1.89.1"
+  dependencies:
+    "@babel/runtime": ^7.23.4
+    "@noble/curves": ^1.2.0
+    "@noble/hashes": ^1.3.2
+    "@solana/buffer-layout": ^4.0.1
+    agentkeepalive: ^4.5.0
+    bigint-buffer: ^1.1.5
+    bn.js: ^5.2.1
+    borsh: ^0.7.0
+    bs58: ^4.0.1
+    buffer: 6.0.3
+    fast-stable-stringify: ^1.0.0
+    jayson: ^4.1.0
+    node-fetch: ^2.7.0
+    rpc-websockets: ^7.5.1
+    superstruct: ^0.14.2
+  checksum: 4c87fdefa4f750cbb308e6d41e74d2f4bb42a31b2fc8df195daa46fc26cbde4f2e1ed46b8308481d9372371b192d6f81a7c69315248e080e4f7fffc87a0d3087
+  languageName: node
+  linkType: hard
+
+"@solana/web3.js@npm:^1.68.0":
   version: 1.91.4
   resolution: "@solana/web3.js@npm:1.91.4"
   dependencies:
@@ -1644,46 +1666,46 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@typemove/aptos@npm:~1.5.5":
-  version: 1.5.5
-  resolution: "@typemove/aptos@npm:1.5.5"
+"@typemove/aptos@npm:~1.5.6":
+  version: 1.5.6
+  resolution: "@typemove/aptos@npm:1.5.6"
   dependencies:
-    "@aptos-labs/ts-sdk": ~1.10.0
-    "@typemove/move": 1.5.5
+    "@aptos-labs/ts-sdk": ~1.13.0
+    "@typemove/move": 1.5.6
     chalk: ^5.3.0
     commander: ^12.0.0
     prettier: ^3.2.4
     radash: ^12.0.0
   bin:
     typemove-aptos: dist/esm/codegen/run.js
-  checksum: 5be8ed050f3f16c85bb757056366c121ed5646fff3a9f5a949750e3c40cec7d5e234396159275408bdbe7e227b65d21fe482840364187d8f4783a3b4b6c00e5f
+  checksum: 47d3c2323e6416c2684c70ca40a2499235750657d88f2fbdb3f5c2015fdd21050952427130a89e4b27d226d61a39b99bc3ba1d5c5e33601686fbec8920e949a5
   languageName: node
   linkType: hard
 
-"@typemove/move@npm:1.5.5, @typemove/move@npm:~1.5.5":
-  version: 1.5.5
-  resolution: "@typemove/move@npm:1.5.5"
+"@typemove/move@npm:1.5.6, @typemove/move@npm:~1.5.6":
+  version: 1.5.6
+  resolution: "@typemove/move@npm:1.5.6"
   dependencies:
     chalk: ^5.3.0
     radash: ^12.0.0
-  checksum: 1a2191161e09e9e68d5142a8ef93ef31fb1967b1a68b67636bc096c72e424ccc7075c7d50680e496a3df12036d9ffbd4ac337d225dc6b2e68219274e7f751779
+  checksum: b05e293df74c687ef82a3a4bdd474552dac56f30e36a61b4e1612ce6f412348c754067a9b08cbf846d56c88d1f4e025a85d8e03694f79297908a6ad8c093c33d
   languageName: node
   linkType: hard
 
-"@typemove/sui@npm:~1.5.5":
-  version: 1.5.5
-  resolution: "@typemove/sui@npm:1.5.5"
+"@typemove/sui@npm:~1.5.6":
+  version: 1.5.6
+  resolution: "@typemove/sui@npm:1.5.6"
   dependencies:
     "@mysten/bcs": ^0.11.0
     "@mysten/sui.js": ~0.51.0
-    "@typemove/move": 1.5.5
+    "@typemove/move": 1.5.6
     chalk: ^5.3.0
     commander: ^12.0.0
     prettier: ^3.2.4
     radash: ^12.0.0
   bin:
     typemove-sui: dist/esm/codegen/run.js
-  checksum: c9660b235cdaf25f6ace8a29bc7ae6640b400c3165752c14ecc3845b1fa5d4e9c2b17eaf4f37503a50a9e726b67d7532880ad88231f439d0f8d6e7e63d316520
+  checksum: 4657c956d91e39fa0b540dc457b43024167f512029669a7944463936365e9aa00f07c6ff061155aaf59e89dd0871346e6e89c7ac50dcd9e6974505556e8706e1
   languageName: node
   linkType: hard
 
@@ -3240,6 +3262,13 @@ __metadata:
     no-case: ^3.0.4
     tslib: ^2.0.3
   checksum: a65e3519414856df0228b9f645332f974f2bf5433370f544a681122eab59e66038fc3349b4be1cdc47152779dac71a5864f1ccda2f745e767c46e9c6543b1169
+  languageName: node
+  linkType: hard
+
+"dotenv@npm:^16.4.5":
+  version: 16.4.5
+  resolution: "dotenv@npm:16.4.5"
+  checksum: 301a12c3d44fd49888b74eb9ccf9f07a1f5df43f489e7fcb89647a2edcd84c42d6bc349dc8df099cd18f07c35c7b04685c1a4f3e6a6a9e6b30f8d48c15b7f49c
   languageName: node
   linkType: hard
 
@@ -6265,8 +6294,9 @@ __metadata:
   resolution: "pendle-renzo-tracking@workspace:."
   dependencies:
     "@sentio/cli": ^2.14.2
-    "@sentio/sdk": ^2.32.5
+    "@sentio/sdk": ^2.34.1
     "@types/nedb": ^1.8.16
+    dotenv: ^16.4.5
     nedb: ^1.8.0
     nedb-async: ^0.1.6
     sqlite: ^5.1.1
