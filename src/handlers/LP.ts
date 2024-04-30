@@ -141,6 +141,7 @@ export async function handleLiquidLockerAccounts(ctx: EthContext, receiptToken: 
 
   const llActiveBalance = await market.activeBalance(ll.address);
   await updateGlobalPoint(ctx);
+
   await updateMarketAccount(ctx, ll.lpAddress, ll.address, llActiveBalance);
 
   const userBalances = await readAllUserERC20Balances(ctx, accounts, receiptToken);
@@ -316,8 +317,22 @@ async function updateLiquidLocker(
   receiptToken: string,
   points: PointAmounts
 ) {
+
+  const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
+    (v) => v.receiptToken == receiptToken
+  )!;
+
+  if (ll.deployedBlock > ctx.blockNumber) return;
+
   const token = getERC20ContractOnContext(ctx, receiptToken);
-  const supply = await token.totalSupply();
+  let supply = 0n; 
+  try {
+    supply = await token.totalSupply();
+  } catch (e) {
+    throw new Error(`Failed to get total supply of receipt token ${receiptToken} ${ctx.blockNumber} ${points.ezPoint}`)
+    // console.error("Failed to get total supply of receipt token", e, receiptToken, ctx.blockNumber);
+  }
+
   let llGlobData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({
     _id: receiptToken,
   });

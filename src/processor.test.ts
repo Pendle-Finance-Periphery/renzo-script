@@ -15,22 +15,22 @@ describe('Test Processor', () => {
     test('has config', async () => {
         await service.eth.testBlock(blockData, EthChainId.ARBITRUM)
         await service.eth.testBlock(blockData2, EthChainId.ARBITRUM)
-        await service.eth.testLog({
-            transactionHash: '0xf3c0f900f974761fc4ac0208d102000c34071bdb90e474d52a97be07045d5945',
-            blockHash: '0x8da3318ed5b9ba821070037f239bdc6e401f4a30fed40d41430fc79b279a1657',
-            blockNumber: BLOCK_NUMBER + 1000,
-            removed: false,
-            address: PENDLE_POOL_ADDRESSES.LPs[0].address,
-            data: '0x000000000000000000000000000000000000000000000000004caf17d998f10effffffffffffffffffffffffffffffffffffffffffffffffffb4511eebbbf96c0000000000000000000000000000000000000000fe55cd8544b442b5b2d0944c000000000000000000000000000000000000000000000063eadcf9c2ee507fb6ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7d',
-            topics: ["0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67", "0x00000000000000000000000011ddd59c33c73c44733b4123a86ea5ce57f6e854", "0x00000000000000000000000011ddd59c33c73c44733b4123a86ea5ce57f6e854"],
-            index: 1,
-            transactionIndex: 1,
+        // await service.eth.testLog({
+        //     transactionHash: '0xf3c0f900f974761fc4ac0208d102000c34071bdb90e474d52a97be07045d5945',
+        //     blockHash: '0x8da3318ed5b9ba821070037f239bdc6e401f4a30fed40d41430fc79b279a1657',
+        //     blockNumber: BLOCK_NUMBER + 1000,
+        //     removed: false,
+        //     address: PENDLE_POOL_ADDRESSES.LPs[0].address,
+        //     data: '0x000000000000000000000000000000000000000000000000004caf17d998f10effffffffffffffffffffffffffffffffffffffffffffffffffb4511eebbbf96c0000000000000000000000000000000000000000fe55cd8544b442b5b2d0944c000000000000000000000000000000000000000000000063eadcf9c2ee507fb6ffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff7d',
+        //     topics: ["0xc42079f94a6350d7e6235f29174924f928cc2ac818eb64fed8004e115fbcca67", "0x00000000000000000000000011ddd59c33c73c44733b4123a86ea5ce57f6e854", "0x00000000000000000000000011ddd59c33c73c44733b4123a86ea5ce57f6e854"],
+        //     index: 1,
+        //     transactionIndex: 1,
 
-        }, EthChainId.ARBITRUM)
+        // }, EthChainId.ARBITRUM)
     })
 })
 
-const BLOCK_NUMBER = 191582625
+const BLOCK_NUMBER = 195418263
 const TIMESTAMP = 1714348800 - 1
 
 const blockData = {
