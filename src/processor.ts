@@ -9,9 +9,7 @@ import {
   handleYTTransfer,
   updateAllYTAccounts,
 } from "./handlers/YT.js";
-import {
-  PendleMarketProcessor,
-} from "./types/eth/pendlemarket.js";
+import { PendleMarketProcessor } from "./types/eth/pendlemarket.js";
 import {
   handleMarketAccounts,
   handleLiquidLockerAccounts,
@@ -25,8 +23,10 @@ import { emitAllPoints } from "./points/point-manager.js";
 
 GLOBAL_CONFIG.execution = {
   sequential: true,
-  forceExactBlockTime: true
+  forceExactBlockTime: true,
 };
+
+let batchBeforeExpiryHandled = false;
 
 PendleYieldTokenProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.YT,
@@ -40,17 +40,29 @@ PendleYieldTokenProcessor.bind({
   .onEventRedeemInterest(async (evt, ctx) => {
     await handleYTRedeemInterest(evt, ctx);
   })
-  .onTimeInterval(async (_, ctx) => {
-    await updateAllYTAccounts(ctx, [], true);
-    await updateAllLPAccounts(ctx);
-    await emitAllPoints(ctx);
-  }, MISC_CONSTS.ONE_DAY_IN_MINUTE).onBlockInterval(async (_, ctx) => {
-    const diff = PENDLE_POOL_ADDRESSES.EXPIRY - getUnixTimestamp(ctx.timestamp);
-    if (diff < 0 || diff > 30) return;
-    await updateAllYTAccounts(ctx, [], true);
-    await updateAllLPAccounts(ctx);
-    await emitAllPoints(ctx);
-  }, 20, 10000);
+  .onTimeInterval(
+    async (_, ctx) => {
+      await updateAllYTAccounts(ctx, [], true);
+      await updateAllLPAccounts(ctx);
+      await emitAllPoints(ctx);
+    },
+    MISC_CONSTS.ONE_DAY_IN_MINUTE,
+    MISC_CONSTS.ONE_DAY_IN_MINUTE * 7
+  )
+  .onBlockInterval(
+    async (_, ctx) => {
+      const diff =
+        PENDLE_POOL_ADDRESSES.EXPIRY - getUnixTimestamp(ctx.timestamp);
+      if (diff < 0 || diff > 30 || batchBeforeExpiryHandled) return;
+
+      batchBeforeExpiryHandled = true;
+      await updateAllYTAccounts(ctx, [], true);
+      await updateAllLPAccounts(ctx);
+      await emitAllPoints(ctx);
+    },
+    20,
+    10000
+  );
 
 for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
   PendleMarketProcessor.bind({
@@ -70,7 +82,7 @@ for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
     })
     .onEventSwap(async (evt, ctx) => {
       await updateGlobalPoint(ctx);
-    })
+    });
 }
 
 for (let eqb of [
