@@ -1,4 +1,5 @@
 
+import { EthChainId } from "@sentio/sdk/eth";
 
 
 
@@ -11,6 +12,7 @@ export const MISC_CONSTS = {
 
 
 export const PENDLE_POOL_ADDRESSES = {
+    network: EthChainId.ARBITRUM,
     SY: "0x0de802e3d6cc9145a150bbdc8da9f988a98c5202",
     YT: "0x05735b65686635f5c87aa9d2dae494fb2e838f38",
     LPs: [

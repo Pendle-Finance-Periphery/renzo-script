@@ -83,6 +83,7 @@ export async function emitAllPoints(ctx: EthContext): Promise<void> {
         label,
         ezPoint,
         elPoint,
+        severity: LogLevel.INFO
       });
 
       await accountPointDb.asyncUpdate(

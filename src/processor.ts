@@ -32,7 +32,7 @@ PendleYieldTokenProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.YT,
   startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
   name: "Pendle Pool YT",
-  network: EthChainId.ARBITRUM,
+  network: PENDLE_POOL_ADDRESSES.network,
 })
   .onEventTransfer(async (evt, ctx) => {
     await handleYTTransfer(evt, ctx);
@@ -46,7 +46,7 @@ PendleYieldTokenProcessor.bind({
       await updateAllLPAccounts(ctx);
       await emitAllPoints(ctx);
     },
-    MISC_CONSTS.ONE_DAY_IN_MINUTE,
+    60 * 4,
     MISC_CONSTS.ONE_DAY_IN_MINUTE * 7
   )
   .onBlockInterval(
@@ -69,7 +69,7 @@ for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
     address: marketInfo.address,
     startBlock: marketInfo.deployedBlock,
     name: "Pendle Pool LP",
-    network: EthChainId.ARBITRUM,
+    network: PENDLE_POOL_ADDRESSES.network,
   })
     .onEventTransfer(async (evt, ctx) => {
       await handleMarketAccounts(ctx, ctx.address, [
@@ -93,7 +93,7 @@ for (let eqb of [
     address: eqb,
     startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
     name: "Equilibria Base Reward",
-    network: EthChainId.ARBITRUM,
+    network: PENDLE_POOL_ADDRESSES.network,
   })
     .onEventStaked(async (evt, ctx) => {
       await handleLiquidLockerAccounts(ctx, ctx.address, [evt.args._user]);
@@ -111,7 +111,7 @@ for (let penpie of [
     address: penpie,
     startBlock: PENDLE_POOL_ADDRESSES.START_BLOCK,
     name: "Penpie Receipt Token",
-    network: EthChainId.ARBITRUM,
+    network: PENDLE_POOL_ADDRESSES.network,
   }).onEventTransfer(async (evt, ctx) => {
     await handleLiquidLockerAccounts(ctx, ctx.address, [
       evt.args.from,
