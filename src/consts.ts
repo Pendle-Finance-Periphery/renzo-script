@@ -12,37 +12,37 @@ export const MISC_CONSTS = {
 
 
 export const PENDLE_POOL_ADDRESSES = {
-    network: EthChainId.ETHEREUM,
-    SY: "0x22e12a50e3ca49fb183074235cb1db84fe4c716d",
-    YT: "0x7749f5ed1e356edc63d469c2fcac9adeb56d1c2b",
+    network: EthChainId.BINANCE,
+    SY: "0xe49269b5d31299bce407c8cccf241274e9a93c9a",
+    YT: "0x964b6d486a89025e5557a5af3b4cc100a3f9734c",
     LPs: [
         {
-            address: "0xd8f12bcde578c653014f27379a6114f67f0e445f",
-            deployedBlock: 19703129            
+            address: "0xb2eea27af50030a445418553c4892065cf3a720a",
+            deployedBlock: 38051460            
         },
     ],
-    START_BLOCK: 19703129,
-    EXPIRY: 1735171200,
-    TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
-    EQB_STAKING: "0x9fe99f1071b01bc04bbad0d48b59ca0e7b23e0b1",
-    PENPIE_RECEIPT_TOKEN: "0xa809f81b1d9278b7dd0eb88df64cdb474966dbe1",
+    START_BLOCK: 38051460,
+    EXPIRY: 1727308800,
+    TREASURY: "0xd77e9062c6df3f2d1cb5bf45855fa1e7712a059e",
+    EQB_STAKING: "0xd2539f03427dbd70c7cc42b779fa41f994cc4bfa",
+    PENPIE_RECEIPT_TOKEN: "0x22f546fb724feb03eb1e2a49109d4a864721dccd",
 
     // STAKEDAO_RECEIPT_TOKEN: "0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a",
     MULTICALL: "0xca11bde05977b3631167028862be2a173976ca11",
     LIQUID_LOCKERS: [
         {
             // Penpie
-            address: "0x6e799758cee75dae3d84e09d40dc416ecf713652",
-            receiptToken: "0xa809f81b1d9278b7dd0eb88df64cdb474966dbe1",
-            lpAddress: "0xd8f12bcde578c653014f27379a6114f67f0e445f",
-            deployedBlock: 19714868
+            address: "0x782d9d67feaa4d1cdf8222d9053c8cba1c3b7982",
+            receiptToken: "0x22f546fb724feb03eb1e2a49109d4a864721dccd",
+            lpAddress: "0xb2eea27af50030a445418553c4892065cf3a720a",
+            deployedBlock: 38161130
         },
         {
             // EQB
             address: '0x64627901dadb46ed7f275fd4fc87d086cff1e6e3',
-            receiptToken: "0x9fe99f1071b01bc04bbad0d48b59ca0e7b23e0b1",
-            lpAddress: "0xd8f12bcde578c653014f27379a6114f67f0e445f",
-            deployedBlock: 19716418
+            receiptToken: "0xd2539f03427dbd70c7cc42b779fa41f994cc4bfa",
+            lpAddress: "0xb2eea27af50030a445418553c4892065cf3a720a",
+            deployedBlock: 38103673            
         },
         // {   // STAKEDAO
         //     address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
