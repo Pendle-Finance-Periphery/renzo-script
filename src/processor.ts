@@ -87,7 +87,6 @@ for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
 
 for (let eqb of [
   PENDLE_POOL_ADDRESSES.EQB_STAKING,
-  PENDLE_POOL_ADDRESSES.EQB_STAKING_NEW,
 ]) {
   EQBBaseRewardProcessor.bind({
     address: eqb,
@@ -105,7 +104,6 @@ for (let eqb of [
 
 for (let penpie of [
   PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN,
-  PENDLE_POOL_ADDRESSES.PENPIE_RECEIPT_TOKEN_NEW,
 ]) {
   ERC20Processor.bind({
     address: penpie,
