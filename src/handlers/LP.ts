@@ -391,16 +391,13 @@ async function fetchMarketData(ctx: EthContext) {
   );
   const results = await multicall.callStatic.tryAggregate(true, allCalls);
 
-  const rtnData = [
-    {
-      totalSy: 0n,
-      totalActiveSupply: 0n,
-    },
-    {
-      totalSy: 0n,
-      totalActiveSupply: 0n,
-    },
-  ];
+  const rtnData = new Array<{
+    totalSy: bigint;
+    totalActiveSupply: bigint;
+  }>(PENDLE_POOL_ADDRESSES.LPs.length).fill({
+    totalSy: 0n,
+    totalActiveSupply: 0n,
+  });
 
   for (let i = 0; i * 2 < results.length; ++i) {
     const market = getPendleMarketContractOnContext(
