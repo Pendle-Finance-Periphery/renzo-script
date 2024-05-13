@@ -211,6 +211,10 @@ async function updateLiquidLockerAccount(
   if (account == MISC_CONSTS.ZERO_ADDRESS) return;
 
   const globData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({ _id: receiptToken });
+  if (!globData) {
+    return;
+  }
+
   const _id = `${receiptToken}-${account}`;
   let accountData = await allDbs.llAccountDb.asyncFindOne<LiquidLockerAccount>({ _id });
 
