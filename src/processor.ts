@@ -60,7 +60,7 @@ PendleYieldTokenProcessor.bind({
       await updateAllLPAccounts(ctx);
       await emitAllPoints(ctx);
     },
-    20,
+    1,
     10000
   );
 
