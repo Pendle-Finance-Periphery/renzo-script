@@ -25,7 +25,7 @@ import {
   readAllUserActiveBalances,
   readAllUserERC20Balances,
 } from "../multicall.js";
-import { EVENT_USER_SHARE, POINT_SOURCE_LP, PointAmounts } from "../types.js";
+import { EVENT_USER_SHARE, POINT_SOURCE_LP, PointAmounts, UPDATE_TYPE_LIQUID_LOCKER_INFO, UPDATE_TYPE_MARKET_INFO, UPDATE_TYPE_USER_LIQUID_LOCKER_INFO, UPDATE_TYPE_USER_MARKET_INFO } from "../types.js";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
@@ -194,6 +194,12 @@ export async function updateGlobalPoint(ctx: EthContext) {
       };
 
     }
+
+    ctx.eventLogger.emit(UPDATE_TYPE_MARKET_INFO, {
+      market: PENDLE_POOL_ADDRESSES.LPs[i].address,
+      ...metaDatas[i],
+    })
+
     await allDbs.marketGlobalDb.asyncUpdate(
       { _id: PENDLE_POOL_ADDRESSES.LPs[i].address },
       globData,
@@ -247,6 +253,12 @@ async function updateLiquidLockerAccount(
     };
   }
 
+  ctx.eventLogger.emit(UPDATE_TYPE_USER_LIQUID_LOCKER_INFO, {
+    user: account,
+    receiptToken,
+    balance: accountBalance,
+  });
+
   await allDbs.llAccountDb.asyncUpdate({ _id }, accountData, { upsert: true });
 }
 
@@ -299,9 +311,14 @@ async function updateMarketAccount(
       const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
         (v) => v.address == account && v.lpAddress == market
       )!;
-      await updateLiquidLocker(ctx, ll.receiptToken, points);
+      await updateLiquidLocker(ctx, ll.receiptToken, points, newActiveBalance);
     } else {
       await updateUserPoint(account, POINT_SOURCE_LP, points);
+      ctx.eventLogger.emit(UPDATE_TYPE_USER_MARKET_INFO, {
+        user: account,
+        activeBalance: newActiveBalance,
+        market,
+      })
     }
 
     accountData = {
@@ -319,7 +336,8 @@ async function updateMarketAccount(
 async function updateLiquidLocker(
   ctx: EthContext,
   receiptToken: string,
-  points: PointAmounts
+  points: PointAmounts,
+  newActiveBalance: bigint
 ) {
 
   const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
@@ -342,7 +360,7 @@ async function updateLiquidLocker(
   });
   if (!llGlobData) {
     if (points.ezPoint > 0n) {
-      throw new Error("What the actual f???")
+      throw new Error("Invalid state llGlobData not found but points.ezPoint > 0")
     }
     llGlobData = {
       _id: receiptToken,
@@ -361,6 +379,13 @@ async function updateLiquidLocker(
     );
     llGlobData.lastTotalSupply = supply.toString();
   }
+
+  ctx.eventLogger.emit(UPDATE_TYPE_LIQUID_LOCKER_INFO, {
+    liquidLockerReceiptToken: receiptToken,
+    totalSupply: supply,
+    market: ll.lpAddress,
+    activeBalance: newActiveBalance,
+  })
 
   await allDbs.llGlobalDb.asyncUpdate({ _id: receiptToken }, llGlobData, {
     upsert: true,
