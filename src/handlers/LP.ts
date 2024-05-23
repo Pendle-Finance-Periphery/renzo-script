@@ -285,6 +285,12 @@ async function updateMarketAccount(
       accountIndexEz: globData.globalIndexEz,
       lastActiveBalance: newActiveBalance.toString(),
     };
+    if (isLiquidLockerAddress(account)) {
+      const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
+        (v) => v.address == account && v.lpAddress == market
+      )!;
+      await updateLiquidLocker(ctx, ll.receiptToken, { ezPoint: 0n, elPoint: 0n }, newActiveBalance);
+    }
   } else {
     const ezPoint = calcPointsFromIndexes(
       BigInt(accountData.accountIndexEz),
