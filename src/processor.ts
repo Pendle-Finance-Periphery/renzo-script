@@ -1,9 +1,9 @@
 import { Counter, Gauge } from "@sentio/sdk";
 import { ERC20Processor } from "@sentio/sdk/eth/builtin";
-import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "./consts.js";
+import { MISC_CONSTS, PENDLE_POOL_ADDRESSES, SYNCING_CONFIG } from "./consts.js";
 import { getUnixTimestamp, isPendleAddress } from "./helper.js";
 import { handleSYTransfer } from "./handlers/SY.js";
-import { PendleYieldTokenProcessor } from "./types/eth/pendleyieldtoken.js";
+import { PendleYieldTokenContext, PendleYieldTokenProcessor } from "./types/eth/pendleyieldtoken.js";
 import {
   handleYTRedeemInterest,
   handleYTTransfer,
@@ -18,7 +18,7 @@ import {
 } from "./handlers/LP.js";
 import { EQBBaseRewardProcessor } from "./types/eth/eqbbasereward.js";
 import { GLOBAL_CONFIG } from "@sentio/runtime";
-import { EthChainId } from "@sentio/sdk/eth";
+import { EthChainId, EthContext } from "@sentio/sdk/eth";
 import { emitAllPoints } from "./points/point-manager.js";
 
 GLOBAL_CONFIG.execution = {
@@ -27,6 +27,12 @@ GLOBAL_CONFIG.execution = {
 };
 
 let batchBeforeExpiryHandled = false;
+
+async function updateAll(ctx: PendleYieldTokenContext) {
+  await updateAllYTAccounts(ctx, [], true);
+      await updateAllLPAccounts(ctx);
+      await emitAllPoints(ctx);
+}
 
 PendleYieldTokenProcessor.bind({
   address: PENDLE_POOL_ADDRESSES.YT,
@@ -42,23 +48,34 @@ PendleYieldTokenProcessor.bind({
   })
   .onTimeInterval(
     async (_, ctx) => {
-      await updateAllYTAccounts(ctx, [], true);
-      await updateAllLPAccounts(ctx);
-      await emitAllPoints(ctx);
+      await updateAll(ctx);
     },
     60 * 4,
-    MISC_CONSTS.ONE_DAY_IN_MINUTE * 7
+    60 * 24 * 7
+  ).onTimeInterval(
+    async (_, ctx) => {
+      
+      const currentTimestamp = getUnixTimestamp(ctx.timestamp);
+      let shouldUpdate = false;
+      for(let snapshot of SYNCING_CONFIG.SNAPSHOT_TIMESTAMPS) {
+        if (Math.abs(currentTimestamp - snapshot) < 60 * 60) {
+          shouldUpdate = true;
+          break;
+        }
+      }
+      if (!shouldUpdate) return;
+      await updateAll(ctx);
+    },
+    60,
+    60
   )
   .onBlockInterval(
     async (_, ctx) => {
       const diff =
         PENDLE_POOL_ADDRESSES.EXPIRY - getUnixTimestamp(ctx.timestamp);
       if (diff < 0 || diff > 30 || batchBeforeExpiryHandled) return;
-
       batchBeforeExpiryHandled = true;
-      await updateAllYTAccounts(ctx, [], true);
-      await updateAllLPAccounts(ctx);
-      await emitAllPoints(ctx);
+      await updateAll(ctx);
     },
     20,
     10000
