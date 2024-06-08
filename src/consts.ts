@@ -30,8 +30,13 @@ type PendleLiquidLockers = {
         lpAddress: string,
         deployedBlock: number
     }[],
-
 }
+
+export const SYNCING_CONFIG = {
+    SNAPSHOT_TIMESTAMPS: [1710460800]
+}
+
+
 
 export const PENDLE_POOL_ADDRESSES: PendleLiquidLockers = {
     network: EthChainId.ETHEREUM,
