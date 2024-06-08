@@ -68,3 +68,8 @@ export const PENDLE_POOL_ADDRESSES: PendleLiquidLockers = {
     // }
   ],
 };
+
+export const SYNCING_CONFIG = {
+  SNAPSHOT_TIMESTAMPS: [1710460800]
+}
+
