@@ -10,6 +10,10 @@ export const MISC_CONSTS = {
     MULTICALL_BATCH: 1000,
 }
 
+export const SYNCING_CONFIG = {
+    SNAPSHOT_TIMESTAMPS: [1710460800]
+}
+
 
 export const PENDLE_POOL_ADDRESSES = {
     network: EthChainId.ETHEREUM,
