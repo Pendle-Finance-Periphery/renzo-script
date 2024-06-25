@@ -10,8 +10,9 @@
     "upload": "sentio upload --skip-deps"
   },
   "dependencies": {
-    "@sentio/sdk": "^2.32.5",
+    "@sentio/sdk": "^2.34.1",
     "@types/nedb": "^1.8.16",
+    "dotenv": "^16.4.5",
     "nedb": "^1.8.0",
     "nedb-async": "^0.1.6",
     "sqlite": "^5.1.1",

@@ -1,6 +1,12 @@
 import { LogLevel } from "@sentio/sdk";
 import { EthContext } from "@sentio/sdk/eth";
 import { PENDLE_POOL_ADDRESSES } from "../consts.js";
+import { POINT_SOURCE, PointAmounts } from "../types.js";
+import { AsyncNedb } from "nedb-async";
+import { addBigInt, getDbPath, getUnixTimestamp } from "../helper.js";
+
+const TIMESTAMP_4X_BOOST = 1714132255;
+const TIMESTAMP_1_5_BOOST = 1719327600;
 
 /**
  *
@@ -10,88 +16,84 @@ import { PENDLE_POOL_ADDRESSES } from "../consts.js";
  *
  * @dev to be modified by renzo team
  */
-function calcPointsFromHolding(
+export function calcPointsFromHolding(
+  ctx: EthContext,
   amountEzEthHolding: bigint,
   holdingPeriod: bigint
-): [bigint, bigint] {
-  return [
-    amountEzEthHolding * holdingPeriod,
-    amountEzEthHolding * holdingPeriod,
-  ];
+): PointAmounts {
+  let timestamp = getUnixTimestamp(ctx.timestamp);
+  let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
+  ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
+
+  return {
+    ezPoint: (amountEzEthHolding * holdingPeriod * ezMultiplier) / 3600n,
+    elPoint: (amountEzEthHolding * holdingPeriod) / 3600n,
+  };
 }
 
-export function updatePoints(
-  ctx: EthContext,
-  label: string,
-  account: string,
-  amountEzEthHolding: bigint,
-  holdingPeriod: bigint,
-  updatedAt: number
-) {
-  const [ezPoint, elPoint] = calcPointsFromHolding(
-    amountEzEthHolding,
-    holdingPeriod
-  );
+const accountPointDb = new AsyncNedb({
+  filename: getDbPath("account-points"),
+  autoload: true,
+});
+accountPointDb.persistence.setAutocompactionInterval(60 * 1000);
 
-  if (label == "YT") {
-    const ezPointTreasuryFee = calcTreasuryFee(ezPoint);
-    const elPointTreasuryFee = calcTreasuryFee(elPoint);
-    increasePoint(
-      ctx,
-      label,
-      account,
-      amountEzEthHolding,
-      holdingPeriod,
-      ezPoint - ezPointTreasuryFee,
-      elPoint - elPointTreasuryFee,
-      updatedAt
-    );
-    increasePoint(
-      ctx,
-      label,
-      PENDLE_POOL_ADDRESSES.TREASURY,
-      0n,
-      holdingPeriod,
-      ezPointTreasuryFee,
-      elPointTreasuryFee,
-      updatedAt
+type AccountPoint = {
+  _id: string;
+  accruedEz: string;
+  accruedEl: string;
+};
+
+export async function updateUserPoint(
+  account: string,
+  label: POINT_SOURCE,
+  points: PointAmounts
+): Promise<void> {
+  const _id = `${account}-${label}`;
+  const snapshot = await accountPointDb.asyncFindOne<AccountPoint>({ _id });
+  if (!snapshot) {
+    await accountPointDb.asyncUpdate(
+      { _id },
+      {
+        _id,
+        accruedEz: points.ezPoint.toString(),
+        accruedEl: points.elPoint.toString(),
+      },
+      { upsert: true }
     );
   } else {
-    increasePoint(
-      ctx,
-      label,
-      account,
-      amountEzEthHolding,
-      holdingPeriod,
-      ezPoint,
-      elPoint,
-      updatedAt
+    await accountPointDb.asyncUpdate(
+      { _id },
+      {
+        _id,
+        accruedEz: addBigInt(snapshot.accruedEz, points.ezPoint),
+        accruedEl: addBigInt(snapshot.accruedEl, points.elPoint),
+      }
     );
   }
 }
 
-function increasePoint(
-  ctx: EthContext,
-  label: string,
-  account: string,
-  amountEzEthHolding: bigint,
-  holdingPeriod: bigint,
-  ezPoint: bigint,
-  elPoint: bigint,
-  updatedAt: number
-) {
-  ctx.eventLogger.emit("point_increase", {
-    label,
-    account: account.toLowerCase(),
-    amountEzEthHolding: amountEzEthHolding.scaleDown(18),
-    holdingPeriod,
-    ezPoint,
-    elPoint,
-    updatedAt,
-    severity: LogLevel.INFO,
-  });
-}
+export async function emitAllPoints(ctx: EthContext): Promise<void> {
+  const allPoints = await accountPointDb.asyncFind<AccountPoint>({});
+  await Promise.all(
+    allPoints.map(async (point) => {
+      const account = point._id.split("-")[0];
+      const label = point._id.split("-")[1] as POINT_SOURCE;
 
-function calcTreasuryFee(amount: bigint): bigint {
-  return (amount * 3n) / 100n;
+      const ezPoint = BigInt(point.accruedEz).scaleDown(18);
+      const elPoint = BigInt(point.accruedEl).scaleDown(18);
+
+      ctx.eventLogger.emit("point_increase", {
+        account,
+        label,
+        ezPoint,
+        elPoint,
+        severity: LogLevel.INFO
+      });
+
+      await accountPointDb.asyncUpdate(
+        { _id: point._id },
+        { $set: { accruedEz: "0", accruedEl: "0" } }
+      );
+    })
+  );
 }

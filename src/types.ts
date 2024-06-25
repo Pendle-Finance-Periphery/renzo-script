@@ -6,3 +6,8 @@ export type POINT_SOURCE = "YT" | "LP" | "SY"
 export const POINT_SOURCE_YT: POINT_SOURCE = "YT"
 export const POINT_SOURCE_LP: POINT_SOURCE = "LP"
 export const POINT_SOURCE_SY: POINT_SOURCE = "SY"
+
+export type PointAmounts = {
+    ezPoint: bigint
+    elPoint: bigint
+}
