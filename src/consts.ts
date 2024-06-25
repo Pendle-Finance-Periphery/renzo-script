@@ -8,26 +8,31 @@ export const MISC_CONSTS = {
 };
 
 type PendleLiquidLockers = {
-  network: EthChainId;
-  SY: string;
-  YT: string;
-  LPs: {
-    address: string;
-    deployedBlock: number;
-  }[];
-  START_BLOCK: number;
-  EXPIRY: number;
-  TREASURY: string;
-  EQB_STAKING: string;
-  PENPIE_RECEIPT_TOKEN: string;
-  MULTICALL: string;
-  LIQUID_LOCKERS: {
-    address: string;
-    receiptToken: string;
-    lpAddress: string;
-    deployedBlock: number;
-  }[];
+    network: EthChainId,
+    SY: string,
+    YT: string,
+    LPs: {
+        address: string,
+        deployedBlock: number
+    }[],
+    START_BLOCK: number,
+    EXPIRY: number,
+    TREASURY: string,
+    EQB_STAKING: string,
+    PENPIE_RECEIPT_TOKEN: string,
+    MULTICALL: string,
+    LIQUID_LOCKERS: {
+        address: string,
+        receiptToken: string,
+        lpAddress: string,
+        deployedBlock: number
+    }[],
 };
+
+export const SYNCING_CONFIG = {
+    SNAPSHOT_TIMESTAMPS: [1710460800, 1714132255, 1719327600]
+}
+
 
 export const PENDLE_POOL_ADDRESSES: PendleLiquidLockers = {
   network: EthChainId.ARBITRUM,
@@ -68,8 +73,3 @@ export const PENDLE_POOL_ADDRESSES: PendleLiquidLockers = {
     // }
   ],
 };
-
-export const SYNCING_CONFIG = {
-  SNAPSHOT_TIMESTAMPS: [1710460800]
-}
-
