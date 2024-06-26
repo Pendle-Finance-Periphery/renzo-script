@@ -115,6 +115,10 @@ export async function updateAllLPAccounts(ctx: EthContext) {
     for(const llInfo of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
       if (llInfo.deployedBlock > ctx.blockNumber) continue;
       const allBalances = await readAllUserERC20Balances(ctx, allAccounts, llInfo.receiptToken);
+
+      const sum = allBalances.reduce((a, b) => a + b, 0n);
+      if (sum == 0n) continue;
+
       for (let i = 0; i < allAccounts.length; ++i) {
         await updateLiquidLockerAccount(ctx, allAccounts[i], llInfo.receiptToken, allBalances[i]);
       }
@@ -217,6 +221,11 @@ async function updateLiquidLockerAccount(
   if (account == MISC_CONSTS.ZERO_ADDRESS) return;
 
   const globData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({ _id: receiptToken });
+
+  if (!globData) {
+    console.error("Global data not found", account, accountBalance, receiptToken);
+  }
+
   const _id = `${receiptToken}-${account}`;
   let accountData = await allDbs.llAccountDb.asyncFindOne<LiquidLockerAccount>({ _id });
 
