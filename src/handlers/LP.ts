@@ -115,6 +115,10 @@ export async function updateAllLPAccounts(ctx: EthContext) {
     for(const llInfo of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
       if (llInfo.deployedBlock > ctx.blockNumber) continue;
       const allBalances = await readAllUserERC20Balances(ctx, allAccounts, llInfo.receiptToken);
+
+      const sumAllBalances = allBalances.reduce((acc, v) => acc + Number(v), 0);
+      if (sumAllBalances == 0) continue;
+
       for (let i = 0; i < allAccounts.length; ++i) {
         await updateLiquidLockerAccount(ctx, allAccounts[i], llInfo.receiptToken, allBalances[i]);
       }
