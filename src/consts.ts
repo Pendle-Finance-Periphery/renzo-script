@@ -18,7 +18,7 @@ export const SYNCING_CONFIG = {
 export const PENDLE_POOL_ADDRESSES = {
     network: EthChainId.ETHEREUM,
     SY: "0x9309bcd974cd13457eab1383539b46c93e90b66a",
-    YT: "0x9309bcd974cd13457eab1383539b46c93e90b66a",
+    YT: "0xa2b4c479c98163bbdbd3987a9f3474bb7bc72f84",
     LPs: [
         {
             address: "0xd3bb297264bd6115ae163db4153038a79d78acba",
