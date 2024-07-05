@@ -21,13 +21,13 @@ export function calcPointsFromHolding(
   amountEzEthHolding: bigint,
   holdingPeriod: bigint
 ): PointAmounts {
-  let timestamp = getUnixTimestamp(ctx.timestamp);
-  let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
-  ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
+  // let timestamp = getUnixTimestamp(ctx.timestamp);
+  // let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
+  // ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
 
   return {
-    ezPoint: (amountEzEthHolding * holdingPeriod * ezMultiplier) / 3600n,
-    elPoint: (amountEzEthHolding * holdingPeriod) / 3600n,
+    ezPoint: (amountEzEthHolding * holdingPeriod) / 3600n * 3n,
+    elPoint: 0n,
   };
 }
 
