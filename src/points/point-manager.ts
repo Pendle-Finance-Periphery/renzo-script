@@ -26,7 +26,7 @@ export function calcPointsFromHolding(
   // ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
 
   return {
-    ezPoint: (amountEzEthHolding * holdingPeriod) / 3600n * 3n,
+    ezPoint: (amountEzEthHolding * holdingPeriod) / 3600n / 5000n,
     elPoint: 0n,
   };
 }
