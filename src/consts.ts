@@ -31,7 +31,7 @@ export const PENDLE_POOL_ADDRESSES = {
     EQB_STAKING: "0xdffb3bafc69bcc4052fb852a6a42b36bef026be3",
     PENPIE_RECEIPT_TOKEN: "0xcd3a483c395c800081914ee01b00d2b52c2b2d8f",
 
-    // STAKEDAO_RECEIPT_TOKEN: "0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a",
+    STAKEDAO_RECEIPT_TOKEN: "0x9e4e11a0d644d5a79f793bcfb38cbbe53b26aeba",
     MULTICALL: "0xca11bde05977b3631167028862be2a173976ca11",
     LIQUID_LOCKERS: [
         {
@@ -48,9 +48,11 @@ export const PENDLE_POOL_ADDRESSES = {
             lpAddress: "0xd3bb297264bd6115ae163db4153038a79d78acba",
             deployedBlock: 20173564
         },
-        // {   // STAKEDAO
-        //     address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
-        //     receiptToken: '0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a',
-        // }
+        {   // STAKEDAO
+            address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
+            receiptToken: '0x9e4e11a0d644d5a79f793bcfb38cbbe53b26aeba',
+            lpAddress: "0xd3bb297264bd6115ae163db4153038a79d78acba",
+            deployedBlock: 20224458
+        }
     ],
 }
