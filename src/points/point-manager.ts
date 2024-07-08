@@ -5,8 +5,7 @@ import { POINT_SOURCE, PointAmounts } from "../types.js";
 import { AsyncNedb } from "nedb-async";
 import { addBigInt, getDbPath, getUnixTimestamp } from "../helper.js";
 
-const TIMESTAMP_4X_BOOST = 1714132255;
-const TIMESTAMP_1_5_BOOST = 1719327600;
+const TIMESTAMP_225_BOOST = 1720569600;
 
 /**
  *
@@ -22,11 +21,17 @@ export function calcPointsFromHolding(
   holdingPeriod: bigint
 ): PointAmounts {
   let timestamp = getUnixTimestamp(ctx.timestamp);
-  let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
-  ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
+
+  let ezPoint = (amountEzEthHolding * holdingPeriod) / 3600n;
+  if (timestamp < TIMESTAMP_225_BOOST) {
+    ezPoint = ezPoint * 3n;
+  } else {  
+    ezPoint = ezPoint * 225n / 100n;
+  }
+
 
   return {
-    ezPoint: (amountEzEthHolding * holdingPeriod * ezMultiplier) / 3600n,
+    ezPoint,
     elPoint: (amountEzEthHolding * holdingPeriod) / 3600n,
   };
 }
