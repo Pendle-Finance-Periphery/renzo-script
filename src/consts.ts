@@ -10,47 +10,50 @@ export const MISC_CONSTS = {
     MULTICALL_BATCH: 1000,
 }
 
-export const SYNCING_CONFIG = {
-    SNAPSHOT_TIMESTAMPS: [1710460800, 1714132255, 1719327600, 1720569600]
-}
-
 
 export const PENDLE_POOL_ADDRESSES = {
     network: EthChainId.ETHEREUM,
-    SY: "0x7a493be5c2ce014cd049bf178a1ac0db1b434744",
-    YT: "0x87baf4b42c075db7eb1932a0a49a5465e9a5ce9f",
+    SY: "0x22e12a50e3ca49fb183074235cb1db84fe4c716d",
+    YT: "0x256fb830945141f7927785c06b65dabc3744213c",
     LPs: [
         {
-            address: "0xee6bdfac6767efef0879b924fea12a3437d281a2",
-            deployedBlock: 20158641            
+            address: "0xde715330043799d7a80249660d1e6b61eb3713b3",
+            deployedBlock: 19105379            
         },
     ],
-    START_BLOCK: 20158641,
-    EXPIRY: 1724284800,
+    START_BLOCK: 19105379,
+    EXPIRY: 1714003200,
     TREASURY: "0x8270400d528c34e1596ef367eedec99080a1b592",
-    EQB_STAKING: "0xd64c8d303ce9d0b6da9261be55e408f26c15f0d8",
-    PENPIE_RECEIPT_TOKEN: "0x75cb79a5546fafae16e968e1e81c7dcb51844674",
+    EQB_STAKING: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
+    PENPIE_RECEIPT_TOKEN: "0x788d39ebe18bcd1323b9e879fc87ca24746223db",
 
-    // STAKEDAO_RECEIPT_TOKEN: "0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a",
+    STAKEDAO_RECEIPT_TOKEN: "0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a",
     MULTICALL: "0xca11bde05977b3631167028862be2a173976ca11",
     LIQUID_LOCKERS: [
         {
             // Penpie
             address: "0x6e799758cee75dae3d84e09d40dc416ecf713652",
-            receiptToken: "0x75cb79a5546fafae16e968e1e81c7dcb51844674",
-            lpAddress: "0xee6bdfac6767efef0879b924fea12a3437d281a2",
-            deployedBlock: 20173903
+            receiptToken: "0x788d39ebe18bcd1323b9e879fc87ca24746223db",
+            lpAddress: "0xde715330043799d7a80249660d1e6b61eb3713b3",
+            deployedBlock: 19113162
         },
         {
             // EQB
             address: '0x64627901dadb46ed7f275fd4fc87d086cff1e6e3',
-            receiptToken: "0xd64c8d303ce9d0b6da9261be55e408f26c15f0d8",
-            lpAddress: "0xee6bdfac6767efef0879b924fea12a3437d281a2",
-            deployedBlock: 20173564
+            receiptToken: "0xaa4a7ac0f9d4fcc55138ad7da4fb2a8dd4790b74",
+            lpAddress: "0xde715330043799d7a80249660d1e6b61eb3713b3",
+            deployedBlock: 19126316
         },
-        // {   // STAKEDAO
-        //     address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
-        //     receiptToken: '0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a',
-        // }
+        {   // STAKEDAO
+            address: '0xd8fa8dc5adec503acc5e026a98f32ca5c1fa289a',
+            receiptToken: '0xdd9df6a77b4a4a07875f55ce5cb6b933e52cb30a',
+            lpAddress: '0xde715330043799d7a80249660d1e6b61eb3713b3',
+            deployedBlock: 19175749
+        }
     ],
+}
+
+
+export const SYNCING_CONFIG = {
+    SNAPSHOT_TIMESTAMPS: [PENDLE_POOL_ADDRESSES.EXPIRY, 1710460800, 1714132255, 1719327600, 1720569600, 1714003200]
 }

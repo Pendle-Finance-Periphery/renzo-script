@@ -51,7 +51,7 @@ PendleYieldTokenProcessor.bind({
       await updateAll(ctx);
     },
     60 * 4,
-    60 * 24 * 7
+    60 * 24
   ).onTimeInterval(
     async (_, ctx) => {
       
