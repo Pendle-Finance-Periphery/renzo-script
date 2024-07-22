@@ -21,16 +21,9 @@ export function calcPointsFromHolding(
   amountEzEthHolding: bigint,
   holdingPeriod: bigint
 ): PointAmounts {
-  let timestamp = getUnixTimestamp(ctx.timestamp);
+  // let timestamp = getUnixTimestamp(ctx.timestamp);
 
-  let ezPoint = (amountEzEthHolding * holdingPeriod) / 3600n;
-  if (timestamp < TIMESTAMP_225_BOOST) {
-    ezPoint = ezPoint * 3n;
-  } else {  
-    ezPoint = ezPoint * 225n / 100n;
-  }
-
-
+  let ezPoint = (amountEzEthHolding * holdingPeriod) / 3600n * 2n;
   return {
     ezPoint,
     elPoint: (amountEzEthHolding * holdingPeriod) / 3600n,
