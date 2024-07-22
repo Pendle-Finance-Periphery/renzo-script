@@ -1,7 +1,5 @@
 import { AsyncNedb } from "nedb-async";
-import {
-  getPendleMarketContractOnContext,
-} from "../types/eth/pendlemarket.js";
+import { getPendleMarketContractOnContext } from "../types/eth/pendlemarket.ts";
 import {
   calcPointsFromHolding,
   updateUserPoint,
@@ -19,13 +17,28 @@ import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
 import { EthContext } from "@sentio/sdk/eth";
 import {
   getMulticallContractOnContext,
-  Multicall2,
+  Multicall3,
 } from "../types/eth/multicall.js";
 import {
   readAllUserActiveBalances,
   readAllUserERC20Balances,
 } from "../multicall.js";
-import { EVENT_USER_SHARE, POINT_SOURCE_LP, PointAmounts, UPDATE_TYPE_LIQUID_LOCKER_INFO, UPDATE_TYPE_MARKET_INFO, UPDATE_TYPE_USER_LIQUID_LOCKER_INFO, UPDATE_TYPE_USER_MARKET_INFO } from "../types.js";
+import {
+  EVENT_USER_SHARE,
+  POINT_SOURCE_LP,
+  PointAmounts,
+  UPDATE_TYPE_LIQUID_LOCKER_INFO,
+  UPDATE_TYPE_MARKET_INFO,
+  UPDATE_TYPE_USER_LIQUID_LOCKER_INFO,
+  UPDATE_TYPE_USER_MARKET_INFO,
+} from "../types.js";
+
+import {
+  MarketGlobalData,
+  MarketAccount,
+  LiquidLockerAccount,
+  LiquidLockerGlobData,
+} from "../schema/schema.ts";
 
 /**
  * @dev 1 LP = (X PT + Y SY) where X and Y are defined by market conditions
@@ -37,96 +50,126 @@ import { EVENT_USER_SHARE, POINT_SOURCE_LP, PointAmounts, UPDATE_TYPE_LIQUID_LOC
  * Currently for all liquid lockers, 1 receipt token = 1 LP
  */
 
-const allDbs = {
-  marketGlobalDb: new AsyncNedb({
-    filename: getDbPath("market-global"),
-    autoload: true,
-  }),
-  marketAccountDb: new AsyncNedb({
-    filename: getDbPath("market-accounts"),
-    autoload: true,
-  }),
-  llGlobalDb: new AsyncNedb({
-    filename: getDbPath("ll-global"),
-    autoload: true,
-  }),
-  llAccountDb: new AsyncNedb({
-    filename: getDbPath("ll-accounts"),
-    autoload: true,
-  }),
-};
+// const allDbs = {
+//   marketGlobalDb: new AsyncNedb({
+//     filename: getDbPath("market-global"),
+//     autoload: true,
+//   }),
+//   marketAccountDb: new AsyncNedb({
+//     filename: getDbPath("market-accounts"),
+//     autoload: true,
+//   }),
+//   llGlobalDb: new AsyncNedb({
+//     filename: getDbPath("ll-global"),
+//     autoload: true,
+//   }),
+//   llAccountDb: new AsyncNedb({
+//     filename: getDbPath("ll-accounts"),
+//     autoload: true,
+//   }),
+// };
 
-allDbs.marketGlobalDb.persistence.setAutocompactionInterval(60 * 1000);
-allDbs.marketAccountDb.persistence.setAutocompactionInterval(60 * 1000);
-allDbs.llGlobalDb.persistence.setAutocompactionInterval(60 * 1000);
-allDbs.llAccountDb.persistence.setAutocompactionInterval(60 * 1000);
+// allDbs.marketGlobalDb.persistence.setAutocompactionInterval(60 * 1000);
+// allDbs.marketAccountDb.persistence.setAutocompactionInterval(60 * 1000);
+// allDbs.llGlobalDb.persistence.setAutocompactionInterval(60 * 1000);
+// allDbs.llAccountDb.persistence.setAutocompactionInterval(60 * 1000);
 
-type MarketGlobalData = {
-  _id: string;
-  lastTotalSy: string;
-  lastTotalActiveSupply: string;
-  lastUpdatedAt: number;
-  globalIndexEz: string;
-  globalIndexEl: string;
-};
+// type MarketGlobalData = {
+//   id: string;
+//   lastTotalSy: string;
+//   lastTotalActiveSupply: string;
+//   lastUpdatedAt: number;
+//   globalIndexEz: string;
+//   globalIndexEl: string;
+// };
 
-type MarketAccount = {
-  _id: string;
-  accountIndexEz: string;
-  accountIndexEl: string;
-  lastActiveBalance: string;
-};
+// type MarketAccount = {
+//   id: string;
+//   accountIndexEz: string;
+//   accountIndexEl: string;
+//   lastActiveBalance: string;
+// };
 
-type LiquidLockerGlobData = {
-  _id: string;
-  llIndexEz: string;
-  llIndexEl: string;
-  lastTotalSupply: string;
-};
+// type LiquidLockerGlobData = {
+//   id: string;
+//   llIndexEz: string;
+//   llIndexEl: string;
+//   lastTotalSupply: string;
+// };
 
-type LiquidLockerAccount = {
-  _id: string;
-  accountIndexEz: string;
-  accountIndexEl: string;
-  lastBalance: string;
-};
+// type LiquidLockerAccount = {
+//   id: string;
+//   accountIndexEz: string;
+//   accountIndexEl: string;
+//   lastBalance: string;
+// };
 
 export async function updateAllLPAccounts(ctx: EthContext) {
   await updateGlobalPoint(ctx);
   {
-    const allMarketAccounts = await allDbs.marketAccountDb.asyncFind<MarketAccount>({});
-    const allAccounts = allMarketAccounts.map((v) => v._id.split("-")[1]);
-    
+    // const allMarketAccounts = await allDbs.marketAccountDb.asyncFind<MarketAccount>({});
+
+    const allMarketAccounts = await ctx.store.list(MarketAccount, []);
+
+    const allAccounts = allMarketAccounts.map(
+      (v) => (v.id.toString().toLowerCase()).split("-")[1]
+    );
+
     // Should not do concurrent here...
 
-    for(const lpInfo of PENDLE_POOL_ADDRESSES.LPs) {
+    for (const lpInfo of PENDLE_POOL_ADDRESSES.LPs) {
       if (lpInfo.deployedBlock > ctx.blockNumber) continue;
-      const allActiveBalances = await readAllUserActiveBalances(ctx, lpInfo.address, allAccounts);
+      const allActiveBalances = await readAllUserActiveBalances(
+        ctx,
+        lpInfo.address,
+        allAccounts
+      );
       for (let i = 0; i < allAccounts.length; ++i) {
-        await updateMarketAccount(ctx, lpInfo.address, allAccounts[i], allActiveBalances[i]);
+        await updateMarketAccount(
+          ctx,
+          lpInfo.address,
+          allAccounts[i],
+          allActiveBalances[i]
+        );
       }
     }
   }
 
   {
-    const allLLAccounts = await allDbs.llAccountDb.asyncFind<LiquidLockerAccount>({});
-    const allAccounts = allLLAccounts.map((v) => v._id.split("-")[1]);
+    // const allLLAccounts = await allDbs.llAccountDb.asyncFind<LiquidLockerAccount>({});
+    const allLLAccounts = await ctx.store.list(LiquidLockerAccount, []);
+    const allAccounts = allLLAccounts.map(
+      (v) => (v.id.toString().toLowerCase()).split("-")[1]
+    );
 
-    for(const llInfo of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
+    for (const llInfo of PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS) {
       if (llInfo.deployedBlock > ctx.blockNumber) continue;
-      const allBalances = await readAllUserERC20Balances(ctx, allAccounts, llInfo.receiptToken);
+      const allBalances = await readAllUserERC20Balances(
+        ctx,
+        allAccounts,
+        llInfo.receiptToken
+      );
 
       const sumAllBalances = allBalances.reduce((acc, v) => acc + Number(v), 0);
       if (sumAllBalances == 0) continue;
 
       for (let i = 0; i < allAccounts.length; ++i) {
-        await updateLiquidLockerAccount(ctx, allAccounts[i], llInfo.receiptToken, allBalances[i]);
+        await updateLiquidLockerAccount(
+          ctx,
+          allAccounts[i],
+          llInfo.receiptToken,
+          allBalances[i]
+        );
       }
     }
   }
 }
 
-export async function handleMarketAccounts(ctx: EthContext, market: string, accounts: string[]) {
+export async function handleMarketAccounts(
+  ctx: EthContext,
+  market: string,
+  accounts: string[]
+) {
   market = market.toLowerCase();
   accounts = accounts.map((v) => v.toLowerCase());
   const activeBalances = await readAllUserActiveBalances(ctx, market, accounts);
@@ -136,11 +179,17 @@ export async function handleMarketAccounts(ctx: EthContext, market: string, acco
   }
 }
 
-export async function handleLiquidLockerAccounts(ctx: EthContext, receiptToken: string, accounts: string[]) {
+export async function handleLiquidLockerAccounts(
+  ctx: EthContext,
+  receiptToken: string,
+  accounts: string[]
+) {
   receiptToken = receiptToken.toLowerCase();
   accounts = accounts.map((v) => v.toLowerCase());
 
-  const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find((v) => v.receiptToken == receiptToken)!;
+  const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
+    (v) => v.receiptToken == receiptToken
+  )!;
   const market = getPendleMarketContractOnContext(ctx, ll.lpAddress);
 
   const llActiveBalance = await market.activeBalance(ll.address);
@@ -148,9 +197,18 @@ export async function handleLiquidLockerAccounts(ctx: EthContext, receiptToken: 
 
   await updateMarketAccount(ctx, ll.lpAddress, ll.address, llActiveBalance);
 
-  const userBalances = await readAllUserERC20Balances(ctx, accounts, receiptToken);
-  for(let i = 0; i < accounts.length; ++i) {
-    await updateLiquidLockerAccount(ctx, accounts[i], receiptToken, userBalances[i]);
+  const userBalances = await readAllUserERC20Balances(
+    ctx,
+    accounts,
+    receiptToken
+  );
+  for (let i = 0; i < accounts.length; ++i) {
+    await updateLiquidLockerAccount(
+      ctx,
+      accounts[i],
+      receiptToken,
+      userBalances[i]
+    );
   }
 }
 
@@ -159,20 +217,26 @@ export async function updateGlobalPoint(ctx: EthContext) {
   const metaDatas = await fetchMarketData(ctx);
 
   for (let i = 0; i < metaDatas.length; ++i) {
-    let globData = await allDbs.marketGlobalDb.asyncFindOne<MarketGlobalData>({
-      _id: PENDLE_POOL_ADDRESSES.LPs[i].address,
-    });
+    // let globData = await allDbs.marketGlobalDb.asyncFindOne<MarketGlobalData>({
+    //   id: PENDLE_POOL_ADDRESSES.LPs[i].address,
+    // });
+
+    let globData = await ctx.store.get(
+      MarketGlobalData,
+      PENDLE_POOL_ADDRESSES.LPs[i].address
+    );
+
     if (globData && globData.lastUpdatedAt == timestamp) continue;
 
     if (!globData) {
-      globData = {
-        _id: PENDLE_POOL_ADDRESSES.LPs[i].address,
-        lastTotalSy: metaDatas[i].totalSy.toString(),
-        lastTotalActiveSupply: metaDatas[i].totalActiveSupply.toString(),
+      globData = new MarketGlobalData({
+        id: PENDLE_POOL_ADDRESSES.LPs[i].address,
+        lastTotalSy: metaDatas[i].totalSy,
+        lastTotalActiveSupply: metaDatas[i].totalActiveSupply,
         lastUpdatedAt: timestamp,
-        globalIndexEl: "0",
-        globalIndexEz: "0",
-      };
+        globalIndexEl: 0n,
+        globalIndexEz: 0n,
+      });
     } else {
       const accruedPoints = calcPointsFromHolding(
         ctx,
@@ -182,10 +246,10 @@ export async function updateGlobalPoint(ctx: EthContext) {
 
       const lastTotalActiveSupply = BigInt(globData.lastTotalActiveSupply);
 
-      globData = {
-        _id: PENDLE_POOL_ADDRESSES.LPs[i].address,
-        lastTotalSy: metaDatas[i].totalSy.toString(),
-        lastTotalActiveSupply: metaDatas[i].totalActiveSupply.toString(),
+      globData = new MarketGlobalData({
+        id: PENDLE_POOL_ADDRESSES.LPs[i].address,
+        lastTotalSy: metaDatas[i].totalSy,
+        lastTotalActiveSupply: metaDatas[i].totalActiveSupply,
         lastUpdatedAt: timestamp,
         globalIndexEz: addBigInt(
           globData.globalIndexEz,
@@ -195,20 +259,21 @@ export async function updateGlobalPoint(ctx: EthContext) {
           globData.globalIndexEl,
           calcIndexDelta(accruedPoints.elPoint, lastTotalActiveSupply)
         ),
-      };
-
+      });
     }
 
     ctx.eventLogger.emit(UPDATE_TYPE_MARKET_INFO, {
       market: PENDLE_POOL_ADDRESSES.LPs[i].address,
       ...metaDatas[i],
-    })
+    });
 
-    await allDbs.marketGlobalDb.asyncUpdate(
-      { _id: PENDLE_POOL_ADDRESSES.LPs[i].address },
-      globData,
-      { upsert: true }
-    );
+    await ctx.store.upsert(globData);
+
+    // await allDbs.marketGlobalDb.asyncUpdate(
+    //   { id: PENDLE_POOL_ADDRESSES.LPs[i].address },
+    //   globData,
+    //   { upsert: true }
+    // );
   }
 }
 
@@ -220,21 +285,25 @@ async function updateLiquidLockerAccount(
 ): Promise<void> {
   if (account == MISC_CONSTS.ZERO_ADDRESS) return;
 
-  const globData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({ _id: receiptToken });
+  // const globData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({ id: receiptToken });
+
+  const globData = await ctx.store.get(LiquidLockerGlobData, receiptToken);
+
   if (!globData) {
     return;
   }
 
-  const _id = `${receiptToken}-${account}`;
-  let accountData = await allDbs.llAccountDb.asyncFindOne<LiquidLockerAccount>({ _id });
+  const id = `${receiptToken}-${account}`;
+  // let accountData = await allDbs.llAccountDb.asyncFindOne<LiquidLockerAccount>({ id });
+  let accountData = await ctx.store.get(LiquidLockerAccount, id);
 
   if (!accountData) {
-    accountData = {
-      _id,
+    accountData = new LiquidLockerAccount({
+      id,
       accountIndexEl: globData.llIndexEl,
       accountIndexEz: globData.llIndexEz,
-      lastBalance: accountBalance.toString(),
-    };
+      lastBalance: accountBalance,
+    });
   } else {
     const ezPoint = calcPointsFromIndexes(
       BigInt(accountData.accountIndexEz),
@@ -247,14 +316,14 @@ async function updateLiquidLockerAccount(
       BigInt(accountData.lastBalance)
     );
 
-    await updateUserPoint(account, POINT_SOURCE_LP, { ezPoint, elPoint });
+    await updateUserPoint(ctx, account, POINT_SOURCE_LP, { ezPoint, elPoint });
 
-    accountData = {
-      _id,
+    accountData = new LiquidLockerAccount({
+      id,
       accountIndexEz: globData.llIndexEz,
       accountIndexEl: globData.llIndexEl,
-      lastBalance: accountBalance.toString(),
-    };
+      lastBalance: accountBalance,
+    });
   }
 
   ctx.eventLogger.emit(UPDATE_TYPE_USER_LIQUID_LOCKER_INFO, {
@@ -263,7 +332,8 @@ async function updateLiquidLockerAccount(
     balance: accountBalance,
   });
 
-  await allDbs.llAccountDb.asyncUpdate({ _id }, accountData, { upsert: true });
+  // await allDbs.llAccountDb.asyncUpdate({ id }, accountData, { upsert: true });
+  await ctx.store.upsert(accountData);
 }
 
 async function updateMarketAccount(
@@ -273,31 +343,38 @@ async function updateMarketAccount(
   newActiveBalance: bigint
 ) {
   if (account == MISC_CONSTS.ZERO_ADDRESS) return;
-  const globData = await allDbs.marketGlobalDb.asyncFindOne<MarketGlobalData>({
-    _id: market,
-  });
+  // const globData = await allDbs.marketGlobalDb.asyncFindOne<MarketGlobalData>({
+  //   id: market,
+  // });
+  const globData = await ctx.store.get(MarketGlobalData, market);
   if (!globData) {
-    throw new Error("Global data not found")
+    throw new Error("Global data not found");
     return;
   }
 
-  const _id = `${market}-${account}`;
-  let accountData = await allDbs.marketAccountDb.asyncFindOne<MarketAccount>({
-    _id,
-  });
+  const id = `${market}-${account}`;
+  // let accountData = await allDbs.marketAccountDb.asyncFindOne<MarketAccount>({
+  //   id,
+  // });
+  let accountData = await ctx.store.get(MarketAccount, id);
 
   if (!accountData) {
-    accountData = {
-      _id,
+    accountData = new MarketAccount({
+      id,
       accountIndexEl: globData.globalIndexEl,
       accountIndexEz: globData.globalIndexEz,
-      lastActiveBalance: newActiveBalance.toString(),
-    };
+      lastActiveBalance: newActiveBalance,
+    });
     if (isLiquidLockerAddress(account)) {
       const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
         (v) => v.address == account && v.lpAddress == market
       )!;
-      await updateLiquidLocker(ctx, ll.receiptToken, { ezPoint: 0n, elPoint: 0n }, newActiveBalance);
+      await updateLiquidLocker(
+        ctx,
+        ll.receiptToken,
+        { ezPoint: 0n, elPoint: 0n },
+        newActiveBalance
+      );
     }
   } else {
     const ezPoint = calcPointsFromIndexes(
@@ -323,24 +400,25 @@ async function updateMarketAccount(
       )!;
       await updateLiquidLocker(ctx, ll.receiptToken, points, newActiveBalance);
     } else {
-      await updateUserPoint(account, POINT_SOURCE_LP, points);
+      await updateUserPoint(ctx, account, POINT_SOURCE_LP, points);
       ctx.eventLogger.emit(UPDATE_TYPE_USER_MARKET_INFO, {
         user: account,
         activeBalance: newActiveBalance,
         market,
-      })
+      });
     }
 
-    accountData = {
-      _id,
+    accountData = new MarketAccount({
+      id,
       accountIndexEz: globData.globalIndexEz,
       accountIndexEl: globData.globalIndexEl,
-      lastActiveBalance: newActiveBalance.toString(),
-    };
+      lastActiveBalance: newActiveBalance,
+    });
   }
-  await allDbs.marketAccountDb.asyncUpdate({ _id }, accountData, {
-    upsert: true,
-  });
+  // await allDbs.marketAccountDb.asyncUpdate({ id }, accountData, {
+  //   upsert: true,
+  // });
+  await ctx.store.upsert(accountData);
 }
 
 async function updateLiquidLocker(
@@ -349,7 +427,6 @@ async function updateLiquidLocker(
   points: PointAmounts,
   newActiveBalance: bigint
 ) {
-
   const ll = PENDLE_POOL_ADDRESSES.LIQUID_LOCKERS.find(
     (v) => v.receiptToken == receiptToken
   )!;
@@ -357,27 +434,32 @@ async function updateLiquidLocker(
   if (ll.deployedBlock > ctx.blockNumber) return;
 
   const token = getERC20ContractOnContext(ctx, receiptToken);
-  let supply = 0n; 
+  let supply = 0n;
   try {
     supply = await token.totalSupply();
   } catch (e) {
-    throw new Error(`Failed to get total supply of receipt token ${receiptToken} ${ctx.blockNumber} ${points.ezPoint}`)
+    throw new Error(
+      `Failed to get total supply of receipt token ${receiptToken} ${ctx.blockNumber} ${points.ezPoint}`
+    );
     // console.error("Failed to get total supply of receipt token", e, receiptToken, ctx.blockNumber);
   }
 
-  let llGlobData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({
-    _id: receiptToken,
-  });
+  // let llGlobData = await allDbs.llGlobalDb.asyncFindOne<LiquidLockerGlobData>({
+  //   id: receiptToken,
+  // });
+  let llGlobData = await ctx.store.get(LiquidLockerGlobData, receiptToken);
   if (!llGlobData) {
     if (points.ezPoint > 0n) {
-      throw new Error("Invalid state llGlobData not found but points.ezPoint > 0")
+      throw new Error(
+        "Invalid state llGlobData not found but points.ezPoint > 0"
+      );
     }
-    llGlobData = {
-      _id: receiptToken,
-      llIndexEz: "0",
-      llIndexEl: "0",
-      lastTotalSupply: supply.toString(),
-    };
+    llGlobData = new LiquidLockerGlobData({
+      id: receiptToken,
+      llIndexEz: 0n,
+      llIndexEl: 0n,
+      lastTotalSupply: supply,
+    });
   } else {
     llGlobData.llIndexEz = addBigInt(
       llGlobData.llIndexEz,
@@ -387,7 +469,7 @@ async function updateLiquidLocker(
       llGlobData.llIndexEl,
       calcIndexDelta(points.elPoint, BigInt(llGlobData.lastTotalSupply))
     );
-    llGlobData.lastTotalSupply = supply.toString();
+    llGlobData.lastTotalSupply = supply;
   }
 
   ctx.eventLogger.emit(UPDATE_TYPE_LIQUID_LOCKER_INFO, {
@@ -395,15 +477,16 @@ async function updateLiquidLocker(
     totalSupply: supply,
     market: ll.lpAddress,
     activeBalance: newActiveBalance,
-  })
-
-  await allDbs.llGlobalDb.asyncUpdate({ _id: receiptToken }, llGlobData, {
-    upsert: true,
   });
+
+  // await allDbs.llGlobalDb.asyncUpdate({ id: receiptToken }, llGlobData, {
+  //   upsert: true,
+  // });
+  await ctx.store.upsert(llGlobData);
 }
 
 async function fetchMarketData(ctx: EthContext) {
-  const allCalls: Multicall2.CallStruct[] = [];
+  const allCalls: Multicall3.CallStruct[] = [];
 
   for (let marketInfo of PENDLE_POOL_ADDRESSES.LPs) {
     if (ctx.blockNumber < marketInfo.deployedBlock) continue;

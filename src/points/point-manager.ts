@@ -4,6 +4,7 @@ import { PENDLE_POOL_ADDRESSES } from "../consts.js";
 import { POINT_SOURCE, PointAmounts } from "../types.js";
 import { AsyncNedb } from "nedb-async";
 import { addBigInt, getDbPath, getUnixTimestamp } from "../helper.js";
+import { AccountPoint } from "../schema/schema.ts"
 
 const TIMESTAMP_225_BOOST = 1720569600;
 
@@ -36,53 +37,37 @@ export function calcPointsFromHolding(
   };
 }
 
-const accountPointDb = new AsyncNedb({
-  filename: getDbPath("account-points"),
-  autoload: true,
-});
-accountPointDb.persistence.setAutocompactionInterval(60 * 1000);
-
-type AccountPoint = {
-  _id: string;
-  accruedEz: string;
-  accruedEl: string;
-};
-
 export async function updateUserPoint(
+  ctx: EthContext,
   account: string,
   label: POINT_SOURCE,
   points: PointAmounts
 ): Promise<void> {
   const _id = `${account}-${label}`;
-  const snapshot = await accountPointDb.asyncFindOne<AccountPoint>({ _id });
+  const snapshot = await ctx.store.get(AccountPoint, _id);
   if (!snapshot) {
-    await accountPointDb.asyncUpdate(
-      { _id },
-      {
-        _id,
-        accruedEz: points.ezPoint.toString(),
-        accruedEl: points.elPoint.toString(),
-      },
-      { upsert: true }
-    );
+
+    const newSnapshot = new AccountPoint({
+      id: _id,
+      accruedEz: points.ezPoint,
+      accruedEl: points.elPoint,
+    })
+
+    await ctx.store.upsert(newSnapshot);
   } else {
-    await accountPointDb.asyncUpdate(
-      { _id },
-      {
-        _id,
-        accruedEz: addBigInt(snapshot.accruedEz, points.ezPoint),
-        accruedEl: addBigInt(snapshot.accruedEl, points.elPoint),
-      }
-    );
+    
+    snapshot.accruedEz += points.ezPoint;
+    snapshot.accruedEl += points.elPoint;
+    await ctx.store.upsert(snapshot);
   }
 }
 
 export async function emitAllPoints(ctx: EthContext): Promise<void> {
-  const allPoints = await accountPointDb.asyncFind<AccountPoint>({});
+  const allPoints = await ctx.store.list(AccountPoint, [])
   await Promise.all(
     allPoints.map(async (point) => {
-      const account = point._id.split("-")[0];
-      const label = point._id.split("-")[1] as POINT_SOURCE;
+      const account = point.id.toString().split("-")[0];
+      const label = point.id.toString().split("-")[1] as POINT_SOURCE;
 
       const ezPoint = BigInt(point.accruedEz).scaleDown(18);
       const elPoint = BigInt(point.accruedEl).scaleDown(18);
@@ -95,10 +80,10 @@ export async function emitAllPoints(ctx: EthContext): Promise<void> {
         severity: LogLevel.INFO
       });
 
-      await accountPointDb.asyncUpdate(
-        { _id: point._id },
-        { $set: { accruedEz: "0", accruedEl: "0" } }
-      );
+      
+      point.accruedEz = 0n;
+      point.accruedEl = 0n;
+      await ctx.store.upsert(point);
     })
   );
 }

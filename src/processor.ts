@@ -3,7 +3,7 @@ import { ERC20Processor } from "@sentio/sdk/eth/builtin";
 import { MISC_CONSTS, PENDLE_POOL_ADDRESSES, SYNCING_CONFIG } from "./consts.js";
 import { getUnixTimestamp, isPendleAddress } from "./helper.js";
 import { handleSYTransfer } from "./handlers/SY.js";
-import { PendleYieldTokenContext, PendleYieldTokenProcessor } from "./types/eth/pendleyieldtoken.js";
+import { PendleYieldTokenContext, PendleYieldTokenProcessor } from "./types/eth/pendleyieldtoken.ts";
 import {
   handleYTRedeemInterest,
   handleYTTransfer,
@@ -71,6 +71,12 @@ PendleYieldTokenProcessor.bind({
   )
   .onBlockInterval(
     async (_, ctx) => {
+
+      if (ctx.blockNumber == 19124860) {
+        await updateAll(ctx);
+        return;
+      }
+
       const diff =
         PENDLE_POOL_ADDRESSES.EXPIRY - getUnixTimestamp(ctx.timestamp);
       if (diff < 0 || diff > 30 || batchBeforeExpiryHandled) return;

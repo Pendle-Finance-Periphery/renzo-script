@@ -1,5 +1,5 @@
 import { AsyncNedb } from "nedb-async";
-import { TransferEvent } from "../types/eth/pendlemarket.js";
+import { TransferEvent } from "../types/eth/pendlemarket.ts";
 import { ERC20Context } from "@sentio/sdk/eth/builtin/erc20";
 import { getDbPath, getUnixTimestamp, isPendleAddress } from "../helper.js";
 import { EVENT_USER_SHARE, POINT_SOURCE_SY } from "../types.js";
@@ -44,7 +44,7 @@ async function processAccount(account: string, ctx: ERC20Context) {
     const points = calcPointsFromHolding(
       ctx, BigInt(snapshot.lastBalance), BigInt(timestamp - snapshot.lastUpdatedAt)
     )
-    await updateUserPoint(account, POINT_SOURCE_SY, points);
+    await updateUserPoint(ctx, account, POINT_SOURCE_SY, points);
   }
 
   const newBalance = await ctx.contract.balanceOf(account);

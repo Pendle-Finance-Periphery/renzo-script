@@ -10,7 +10,8 @@
     "upload": "sentio upload --skip-deps"
   },
   "dependencies": {
-    "@sentio/sdk": "^2.34.1",
+    "@sentio/cli": "^2.18.3",
+    "@sentio/sdk": "^2.40.1-rc.3",
     "@types/nedb": "^1.8.16",
     "dotenv": "^16.4.5",
     "nedb": "^1.8.0",
@@ -19,7 +20,6 @@
     "sqlite3": "^5.1.7"
   },
   "devDependencies": {
-    "@sentio/cli": "^2.14.2",
     "typescript": "^5.2.2"
   }
 }

@@ -35,8 +35,8 @@ export function isSentioInternalError(err: any): boolean {
     return false;
 }
 
-export function addBigInt(a: bigint | string | number, b: bigint | string | number): string {
-    return (BigInt(a) + BigInt(b)).toString();
+export function addBigInt(a: bigint | string | number, b: bigint | string | number): bigint {
+    return (BigInt(a) + BigInt(b));
 }
 
 export function calcIndexDelta(additionalPoint: bigint, supply: bigint) {

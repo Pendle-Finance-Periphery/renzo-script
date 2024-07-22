@@ -1,0 +1,71 @@
+# type MarketGlobalData = {
+#   id: string;
+#   lastTotalSy: string;
+#   lastTotalActiveSupply: string;
+#   lastUpdatedAt: number;
+#   globalIndexEz: string;
+#   globalIndexEl: string;
+# };
+
+# type MarketAccount = {
+#   id: string;
+#   accountIndexEz: string;
+#   accountIndexEl: string;
+#   lastActiveBalance: string;
+# };
+
+# type LiquidLockerGlobData = {
+#   id: string;
+#   llIndexEz: string;
+#   llIndexEl: string;
+#   lastTotalSupply: string;
+# };
+
+# type LiquidLockerAccount = {
+#   id: string;
+#   accountIndexEz: string;
+#   accountIndexEl: string;
+#   lastBalance: string;
+# };
+
+type MarketGlobalData @entity {
+  id: ID!
+  lastTotalSy: BigInt!
+  lastTotalActiveSupply: BigInt!
+  lastUpdatedAt: Int!
+  globalIndexEz: BigInt!
+  globalIndexEl: BigInt!
+}
+
+type MarketAccount @entity {
+  id: ID!
+  accountIndexEz: BigInt!
+  accountIndexEl: BigInt!
+  lastActiveBalance: BigInt!
+}
+
+type LiquidLockerGlobData @entity {
+  id: ID!
+  llIndexEz: BigInt!
+  llIndexEl: BigInt!
+  lastTotalSupply: BigInt!
+}
+
+type LiquidLockerAccount @entity {
+  id: ID!
+  accountIndexEz: BigInt!
+  accountIndexEl: BigInt!
+  lastBalance: BigInt!
+}
+
+type YTAccountSnapshot @entity {
+  id: ID!
+  lastUpdatedAt: Int!
+  lastImpliedHolding: BigInt!
+}
+
+type AccountPoint @entity {
+  id: ID!
+  accruedEz: BigInt!
+  accruedEl: BigInt!
+}

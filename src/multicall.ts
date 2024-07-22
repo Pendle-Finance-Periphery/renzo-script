@@ -1,9 +1,9 @@
 import { EthContext } from "@sentio/sdk/eth";
-import { getMulticallContractOnContext, Multicall2 } from "./types/eth/multicall.js";
-import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "./consts.js";
+import { getMulticallContractOnContext, Multicall3 } from "./types/eth/multicall.ts";
+import { MISC_CONSTS, PENDLE_POOL_ADDRESSES } from "./consts.ts";
 import { getERC20ContractOnContext } from "@sentio/sdk/eth/builtin/erc20";
-import { getPendleMarketContractOnContext } from "./types/eth/pendlemarket.js";
-import { getPendleYieldTokenContractOnContext } from "./types/eth/pendleyieldtoken.js";
+import { getPendleMarketContractOnContext } from "./types/eth/pendlemarket.ts";
+import { getPendleYieldTokenContractOnContext } from "./types/eth/pendleyieldtoken.ts";
 
 export async function readAllUserActiveBalances(
     ctx: EthContext,
@@ -19,7 +19,7 @@ export async function readAllUserActiveBalances(
         marketAddr
     );
 
-    const allCalls: Promise<Multicall2.ResultStructOutput[]>[] = [];
+    const allCalls: Promise<Multicall3.ResultStructOutput[]>[] = [];
     for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
         const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
         const calls = batch.map((address) => {
@@ -50,7 +50,7 @@ export async function readAllUserERC20Balances(
         PENDLE_POOL_ADDRESSES.MULTICALL
     );
     const erc20 = getERC20ContractOnContext(ctx, tokenAddress);
-    const allCalls: Promise<Multicall2.ResultStructOutput[]>[] = [];
+    const allCalls: Promise<Multicall3.ResultStructOutput[]>[] = [];
     for (let i = 0; i < allAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
         const batch = allAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
         const calls = batch.map((address) => {
@@ -79,7 +79,7 @@ export async function readAllYTPositions(ctx: EthContext, allUserAddresses: stri
         PENDLE_POOL_ADDRESSES.MULTICALL
     );
     const yt = getPendleYieldTokenContractOnContext(ctx, PENDLE_POOL_ADDRESSES.YT);
-    const allCalls: Promise<Multicall2.ResultStructOutput[]>[] = [];
+    const allCalls: Promise<Multicall3.ResultStructOutput[]>[] = [];
     for (let i = 0; i < allUserAddresses.length; i += MISC_CONSTS.MULTICALL_BATCH) {
         const batch = allUserAddresses.slice(i, i + MISC_CONSTS.MULTICALL_BATCH);
         const calls = batch.map((address) => {
