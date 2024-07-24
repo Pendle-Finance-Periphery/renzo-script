@@ -22,7 +22,7 @@ export function calcPointsFromHolding(
   holdingPeriod: bigint
 ): PointAmounts {
   let timestamp = getUnixTimestamp(ctx.timestamp);
-  let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
+  let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 3n;
   ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
 
   return {
