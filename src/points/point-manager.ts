@@ -7,6 +7,7 @@ import { addBigInt, getDbPath, getUnixTimestamp } from "../helper.js";
 
 const TIMESTAMP_4X_BOOST = 1714132255;
 const TIMESTAMP_1_5_BOOST = 1719327600;
+const TIMESTAMP_BOOST_2_END = 1723208400;
 
 /**
  *
@@ -24,6 +25,7 @@ export function calcPointsFromHolding(
   let timestamp = getUnixTimestamp(ctx.timestamp);
   let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
   ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
+  ezMultiplier = timestamp > TIMESTAMP_BOOST_2_END ? 4n : ezMultiplier;
 
   return {
     ezPoint: (amountEzEthHolding * holdingPeriod * ezMultiplier) / 3600n,
