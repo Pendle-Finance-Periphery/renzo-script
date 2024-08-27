@@ -25,7 +25,7 @@ export function calcPointsFromHolding(
   let timestamp = getUnixTimestamp(ctx.timestamp);
   let ezMultiplier = timestamp > TIMESTAMP_4X_BOOST ? 4n : 2n;
   ezMultiplier = timestamp > TIMESTAMP_1_5_BOOST ? 6n : ezMultiplier;
-  ezMultiplier = timestamp > TIMESTAMP_BOOST_2_END ? 4n : ezMultiplier;
+  ezMultiplier = timestamp > TIMESTAMP_BOOST_2_END ? 3n : ezMultiplier;
 
   return {
     ezPoint: (amountEzEthHolding * holdingPeriod * ezMultiplier) / 3600n,
