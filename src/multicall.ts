@@ -7,6 +7,7 @@ import { getPendleYieldTokenContractOnContext } from "./types/eth/pendleyieldtok
 
 export async function readAllUserActiveBalances(
     ctx: EthContext,
+    marketAddr: string,
     allAddresses: string[]
 ): Promise<bigint[]> {
     const multicall = getMulticallContractOnContext(
@@ -15,7 +16,7 @@ export async function readAllUserActiveBalances(
     );
     const market = getPendleMarketContractOnContext(
         ctx,
-        PENDLE_POOL_ADDRESSES.LP
+        marketAddr
     );
 
     const allCalls: Promise<Multicall2.ResultStructOutput[]>[] = [];
